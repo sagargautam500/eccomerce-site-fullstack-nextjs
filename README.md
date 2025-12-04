@@ -1,6 +1,6 @@
 # 🛍️ E-Commerce Platform
 
-A full-stack e-commerce platform built with Next.js 15, featuring a comprehensive admin panel, multiple payment integrations, and modern state management.
+A full-stack e-commerce platform built with Next.js 16, featuring a comprehensive admin panel, multiple payment integrations, and modern state management.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748)
