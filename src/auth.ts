@@ -50,20 +50,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const parsed = signinSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        // ✅ Admin login check
-        if (
-          parsed.data.email === process.env.ADMIN_EMAIL &&
-          parsed.data.password === process.env.ADMIN_PASSWORD
-        ) {
-          return {
-            id: "admin-id",
-            email: parsed.data.email,
-            role: "admin",
-            name: "Admin",
-          };
-        }
-
-        // ✅ Normal user
         const user = await prisma.user.findUnique({
           where: { email: parsed.data.email },
         });

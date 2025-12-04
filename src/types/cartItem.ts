@@ -1,4 +1,16 @@
-import { Category } from "./category";
+// src/types/cart.ts
+// import { Category } from './category'
+
+export interface Cart {
+  id: string;
+  userId: string;
+  productId: string;
+  quantity: number;
+  size?: string;
+  color?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface CartProduct {
   id: string;
@@ -7,7 +19,7 @@ export interface CartProduct {
   originalPrice?: number;
   thumbnail: string;
   stock: number;
-  category: Category;
+  category: string; // ✅ Changed to string
 }
 
 export interface CartItem {
@@ -19,12 +31,13 @@ export interface CartItem {
   product: CartProduct;
 }
 
-// // Guest cart item (stored in localStorage)
-// interface GuestCartItem {
-//   id: string;
-//   productId: string;
-//   quantity: number;
-//   size?: string;
-//   color?: string;
-//   product: CartProduct;
-// }
+
+// ✅ API Response Types
+export interface CartItemApiResponse {
+  cartItems: CartItem[];
+}
+
+export interface AddCartItemResponse {
+  success: boolean;
+  message?: string;
+}

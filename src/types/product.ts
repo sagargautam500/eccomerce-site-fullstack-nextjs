@@ -23,3 +23,26 @@ export interface Product {
   createdAt: Date
   updatedAt: Date
 }
+export interface ProductProps {
+  id: string
+  name: string
+  description: string
+  price: number        // stored in NPR
+  originalPrice?: number
+  brand?: string
+  categoryId: string
+  subCategoryId: string
+  category?: string|null  
+  subCategory?:  string|null 
+  isFeatured: boolean
+  images: string[]     // multiple images
+  thumbnail: string    // main image
+  sizes: string[]      // ["M", "L", "XL"]
+  colors: string[]     // ["Red", "Black"]
+  stock: number
+  rating?: number
+  totalReviews?: number
+  createdAt: Date
+  updatedAt: Date
+}
+

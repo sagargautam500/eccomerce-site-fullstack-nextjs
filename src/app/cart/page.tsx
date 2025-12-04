@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CartItem } from "@/types/cartItem";
-import { WishlistItem } from "@/types/wishlist";
 
 export default function CartPage() {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function CartPage() {
   const cart = useCartStore((s) => s.cart);
   const guestCart = useCartStore((s) => s.guestCart);
   const loading = useCartStore((s) => s.loading);
-  const isLoggedIn = useCartStore((s) => s.isLoggedIn);
   const setIsLoggedIn = useCartStore((s) => s.setIsLoggedIn);
   const fetchCart = useCartStore((s) => s.fetchCart);
   const mergeGuestCart = useCartStore((s) => s.mergeGuestCart);
@@ -186,7 +184,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4">
+    <div className="min-h-screen bg-gray-50 mt-16 py-6 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">

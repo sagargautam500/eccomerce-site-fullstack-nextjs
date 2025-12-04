@@ -1,12 +1,13 @@
-import { Category } from './category'
+// src/types/wishlist.ts
 
- export interface Wishlist {
+export interface Wishlist {
   id: string;
   userId: string;
   productId: string;
   createdAt: Date;
   updatedAt: Date;
 }
+
 export interface WishlistProduct {
   id: string;
   name: string;
@@ -14,13 +15,21 @@ export interface WishlistProduct {
   originalPrice?: number;
   thumbnail: string;
   stock: number;
-  category: Category;
+  category: string;
 }
 
-// Wishlist item from API
 export interface WishlistItem {
   id: string;
   productId: string;
   product: WishlistProduct;
 }
 
+// ✅ API Response Types
+export interface WishlistApiResponse {
+  wishlist: WishlistItem[];
+}
+
+export interface AddWishlistResponse {
+  success: boolean;
+  message?: string;
+}

@@ -1,3 +1,4 @@
+// src/components/NavbarUI.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +11,6 @@ import {
   HelpCircle,
   Menu,
   X,
-  CreditCard,
   Home,
   Phone,
   Heart,
@@ -21,6 +21,8 @@ import {
   UserCircle,
 } from "lucide-react";
 import { handleSignOut } from "@/actions/authAction";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 
 export default function NavbarUI({ session }: { session: Session | null }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,28 +30,49 @@ export default function NavbarUI({ session }: { session: Session | null }) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  // Get cart and wishlist counts
+const cartCount = useCartStore((state) => state.getCartItemsCount());
+const wishlistCount = useWishlistStore((state) => state.getWishlistCount());
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isUserMenuOpen]);
+
   const isActive = (path: string) => pathname === path;
 
   // Navigation Links Configuration
-  const guestLinks = [
+  const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/products", label: "Products", icon: Package },
-    { href: "/cart", label: "Cart", icon: ShoppingCart },
-    { href: "/wishlist", label: "Wishlist", icon: Heart },
-  ];
-  
-  const userLinks = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/products", label: "Products", icon: Package },
-    { href: "/cart", label: "Cart", icon: ShoppingCart },
-    { href: "/wishlist", label: "Wishlist", icon: Heart },
-    // { href: "/checkout", label: "Checkout", icon: CreditCard },
+    { 
+      href: "/cart", 
+      label: "Cart", 
+      icon: ShoppingCart,
+      badge: cartCount
+    },
+    { 
+      href: "/wishlist", 
+      label: "Wishlist", 
+      icon: Heart,
+      badge: wishlistCount
+    },
   ];
 
   // Dropdown Menu Configuration
@@ -61,14 +84,12 @@ export default function NavbarUI({ session }: { session: Session | null }) {
   ];
 
   const guestDropdownLinks = [
-    { href: "/profile", label: "Profile", icon: UserCircle },
     { href: "/auth/signin", label: "Sign In", icon: User },
     { href: "/auth/signup", label: "Sign Up", icon: UserCircle },
     { href: "/help", label: "Help", icon: HelpCircle },
     { href: "/contact", label: "Contact", icon: Phone },
   ];
 
-  const displayLinks = session ? userLinks : guestLinks;
   const dropdownLinks = session ? loggedInDropdownLinks : guestDropdownLinks;
 
   const handleSignOutClick = async () => {
@@ -82,6 +103,16 @@ export default function NavbarUI({ session }: { session: Session | null }) {
 
   const closeUserMenu = () => {
     setIsUserMenuOpen(false);
+  };
+
+  // Render badge component
+  const Badge = ({ count }: { count: number }) => {
+    if (!count) return null;
+    return (
+      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-md">
+        {count > 99 ? '99+' : count}
+      </span>
+    );
   };
 
   // Render dropdown menu item
@@ -100,22 +131,6 @@ export default function NavbarUI({ session }: { session: Session | null }) {
     );
   };
 
-  // Render mobile menu item
-  const renderMobileMenuItem = (link: typeof dropdownLinks[0], index: number) => {
-    const Icon = link.icon;
-    return (
-      <Link
-        key={index}
-        href={link.href}
-        onClick={closeMenu}
-        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-all"
-      >
-        <Icon className="w-5 h-5" />
-        <span className="font-medium">{link.label}</span>
-      </Link>
-    );
-  };
-
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
@@ -124,34 +139,34 @@ export default function NavbarUI({ session }: { session: Session | null }) {
           : "bg-white/95 backdrop-blur-xl shadow-lg"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 py-4 group">
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 py-4 group flex-shrink-0">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-pink-400 rounded-xl blur-sm group-hover:blur-md transition-all"></div>
-              <div className="relative bg-gradient-to-r from-orange-500 to-pink-500 p-2.5 rounded-xl shadow-md group-hover:shadow-lg transition-all">
-                <ShoppingCart className="w-6 h-6 text-white" />
+              <div className="relative bg-gradient-to-r from-orange-500 to-pink-500 p-2 sm:p-2.5 rounded-xl shadow-md group-hover:shadow-lg transition-all">
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
                 Chimteshwar Shop
               </span>
-              <p className="text-xs text-gray-500 hidden sm:block">Premium Shopping Experience</p>
+              <p className="text-xs text-gray-500 hidden lg:block">Premium Shopping Experience</p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {displayLinks.map((link, index) => {
+            {navLinks.map((link, index) => {
               const Icon = link.icon;
               const active = isActive(link.href);
               return (
                 <Link
                   key={index}
                   href={link.href}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={`relative flex items-center gap-2 px-3 lg:px-4 py-2 rounded-lg font-medium transition-all ${
                     active
                       ? "text-orange-600"
                       : "text-gray-600 hover:text-orange-600 hover:bg-orange-50/50"
@@ -160,27 +175,30 @@ export default function NavbarUI({ session }: { session: Session | null }) {
                   {active && (
                     <span className="absolute inset-0 bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg border border-orange-100"></span>
                   )}
-                  <Icon className={`w-5 h-5 relative z-10 ${active ? "text-orange-600" : ""}`} />
-                  <span className="relative z-10">{link.label}</span>
+                  <div className="relative z-10">
+                    <Icon className={`w-5 h-5 ${active ? "text-orange-600" : ""}`} />
+                    <Badge count={link.badge || 0} />
+                  </div>
+                  <span className="relative z-10 hidden lg:inline">{link.label}</span>
                 </Link>
               );
             })}
           </div>
 
           {/* Desktop Auth Section */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-shrink-0">
             {session && session.user?.role === "admin" && (
               <Link
                 href="/admin"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-400 text-yellow-900 font-medium hover:bg-yellow-500 transition-all shadow-sm hover:shadow-md"
+                className="flex items-center gap-2 px-3 lg:px-4 py-2 rounded-lg bg-yellow-400 text-yellow-900 font-medium hover:bg-yellow-500 transition-all shadow-sm hover:shadow-md text-sm lg:text-base"
               >
                 <Shield className="w-4 h-4" />
-                <span>Admin</span>
+                <span className="hidden lg:inline">Admin</span>
               </Link>
             )}
 
             {/* User/Account Dropdown */}
-            <div className="relative">
+            <div className="relative" data-dropdown>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
@@ -194,14 +212,14 @@ export default function NavbarUI({ session }: { session: Session | null }) {
                     <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-1.5 rounded-full">
                       <User className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
+                    <span className="text-sm font-medium text-gray-700 max-w-[80px] lg:max-w-[100px] truncate hidden lg:inline">
                       {session.user?.name || session.user?.email}
                     </span>
                   </>
                 ) : (
                   <>
                     <User className="w-5 h-5" />
-                    <span>Account</span>
+                    <span className="hidden lg:inline">Account</span>
                   </>
                 )}
                 <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
@@ -227,12 +245,13 @@ export default function NavbarUI({ session }: { session: Session | null }) {
                 </div>
               )}
             </div>
+            
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all"
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all flex-shrink-0"
             aria-label="Toggle menu"
           >
             {isMenuOpen ? (
@@ -254,11 +273,11 @@ export default function NavbarUI({ session }: { session: Session | null }) {
                 <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-2 rounded-full">
                   <User className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900 truncate">
                     {session.user?.name || "User"}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 truncate">
                     {session.user?.email}
                   </p>
                 </div>
@@ -266,7 +285,7 @@ export default function NavbarUI({ session }: { session: Session | null }) {
             )}
 
             {/* Navigation Links */}
-            {displayLinks.map((link, index) => {
+            {navLinks.map((link, index) => {
               const Icon = link.icon;
               const active = isActive(link.href);
               return (
@@ -280,7 +299,14 @@ export default function NavbarUI({ session }: { session: Session | null }) {
                       : "text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 border border-transparent hover:border-orange-100"
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <div className="relative">
+                    <Icon className="w-5 h-5" />
+                    {link.badge && link.badge > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                        {link.badge > 99 ? '99+' : link.badge}
+                      </span>
+                    )}
+                  </div>
                   <span>{link.label}</span>
                 </Link>
               );
@@ -290,7 +316,20 @@ export default function NavbarUI({ session }: { session: Session | null }) {
             <div className="pt-3 border-t border-gray-100 space-y-2">
               {session ? (
                 <>
-                  {dropdownLinks.map((link, index) => renderMobileMenuItem(link, index))}
+                  {dropdownLinks.map((link, index) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={index}
+                        href={link.href}
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-all"
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="font-medium">{link.label}</span>
+                      </Link>
+                    );
+                  })}
                   
                   {session.user?.role === "admin" && (
                     <Link
@@ -327,7 +366,20 @@ export default function NavbarUI({ session }: { session: Session | null }) {
                   >
                     Sign Up
                   </Link>
-                  {guestDropdownLinks.slice(2).map((link, index) => renderMobileMenuItem(link, index + 2))}
+                  {guestDropdownLinks.slice(2).map((link, index) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={index}
+                        href={link.href}
+                        onClick={closeMenu}
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-orange-50 rounded-xl transition-all"
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="font-medium">{link.label}</span>
+                      </Link>
+                    );
+                  })}
                 </>
               )}
             </div>

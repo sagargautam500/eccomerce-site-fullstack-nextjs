@@ -56,7 +56,7 @@ export const useCartStore = create<CartStore>()(
       fetchCart: async () => {
         set({ loading: true });
         try {
-          const { data } = await axios.get("/api/cart/get");
+          const { data } = await axios.get<{ cart: CartItem[] }>("/api/cart/get");
           set({ cart: data.cart || [], isLoggedIn: true });
         } catch (error) {
           console.error("Fetch cart error:", error);
@@ -72,7 +72,7 @@ export const useCartStore = create<CartStore>()(
 
         try {
           // Try server first (will fail with 401 if not logged in)
-          const { data } = await axios.post("/api/cart/add", {
+          const { data } = await axios.post<{ success: boolean; cart?: CartItem[] }>("/api/cart/add", {
             productId,
             quantity,
             size: size || undefined,
@@ -180,7 +180,9 @@ export const useCartStore = create<CartStore>()(
         set({ cart: prevCart.filter((item) => item.id !== itemId) });
 
         try {
-          await axios.delete("/api/cart/delete", { data: { itemId } });
+          await axios.delete("/api/cart/delete", { 
+            data: { itemId } 
+          });
           toast.success("Removed");
         } catch (error) {
           set({ cart: prevCart });

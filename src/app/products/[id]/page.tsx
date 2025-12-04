@@ -1,6 +1,6 @@
 // src/app/products/[id]/page.tsx (updated)
 import { getProductById } from "@/actions/api/productApi";
-import ProductDetails from "@/components/ProductDetails";
+import ProductDetails from "@/components/products/ProductDetails";
 import { notFound } from "next/navigation";
 
 export default async function ProductPage({

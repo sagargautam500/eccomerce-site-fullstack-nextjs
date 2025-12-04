@@ -12,7 +12,7 @@ import {
   Zap,
   Heart,
 } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/products/ProductCard";
 import { getAllProducts } from "@/actions/api/productApi";
 
 export default async function HomePage() {
