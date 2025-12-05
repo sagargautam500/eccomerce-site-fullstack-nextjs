@@ -1,4 +1,4 @@
-// src/components/products/ProductsClient.tsx
+// src/components/products/ProductsClient.tsx (Updated)
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,20 +12,28 @@ import ProductCard from "./ProductCard";
 interface ProductsClientProps {
   categories: Category[];
   subCategories: SubCategory[];
+  initialData: {
+    products: Product[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default function ProductsClient({
   categories,
   subCategories,
+  initialData,
   searchParams,
 }: ProductsClientProps) {
   const router = useRouter();
-  const params = useSearchParams();
+  const urlParams = useSearchParams();
   
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalProducts, setTotalProducts] = useState(0);
+  const [products, setProducts] = useState<Product[]>(initialData.products);
+  const [loading, setLoading] = useState(false);
+  const [totalProducts, setTotalProducts] = useState(initialData.total);
   
   // Pagination state
   const page = Number(searchParams.page) || 1;
@@ -41,41 +49,18 @@ export default function ProductsClient({
     maxPrice: (searchParams.maxPrice as string) || "",
   });
 
-  // Fetch products based on filters
+  // Update products when initialData changes (on navigation)
   useEffect(() => {
-    fetchProducts();
-  }, [searchParams]);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (filters.search) queryParams.set("search", filters.search);
-      if (filters.categoryId) queryParams.set("categoryId", filters.categoryId);
-      if (filters.subCategoryId) queryParams.set("subCategoryId", filters.subCategoryId);
-      if (filters.minPrice) queryParams.set("minPrice", filters.minPrice);
-      if (filters.maxPrice) queryParams.set("maxPrice", filters.maxPrice);
-      queryParams.set("page", page.toString());
-      queryParams.set("limit", limit.toString());
-
-      const res = await fetch(`/api/products?${queryParams.toString()}`);
-      const data = await res.json();
-      
-      setProducts(data.products || []);
-      setTotalProducts(data.total || 0);
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setProducts(initialData.products);
+    setTotalProducts(initialData.total);
+    setLoading(false);
+  }, [initialData]);
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
+    setLoading(true);
     
-    // Update URL
+    // Update URL - this will trigger server-side refetch
     const queryParams = new URLSearchParams();
     if (newFilters.search) queryParams.set("search", newFilters.search);
     if (newFilters.categoryId) queryParams.set("categoryId", newFilters.categoryId);
@@ -88,7 +73,8 @@ export default function ProductsClient({
   };
 
   const handlePageChange = (newPage: number) => {
-    const queryParams = new URLSearchParams(params.toString());
+    setLoading(true);
+    const queryParams = new URLSearchParams(urlParams.toString());
     queryParams.set("page", newPage.toString());
     router.push(`/products?${queryParams.toString()}`);
     
@@ -101,8 +87,8 @@ export default function ProductsClient({
   const subCategoryMap = new Map(subCategories.map(sub => [sub.id, sub]));
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      <div className="max-w-8xl mx-8  px-4 sm:px-6 lg:px-8 py-16 sm:py-24  w-full">
+    <div className="min-h-screen mt-8 bg-gray-50 w-full overflow-x-hidden">
+      <div className="max-w-8xl ml-10  mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 w-full">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 lg:mb-8">
           All Products
         </h1>
@@ -151,7 +137,7 @@ export default function ProductsClient({
             ) : (
               <>
                 {/* Products Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
                   {products.map((product) => (
                     <ProductCard
                       key={product.id}
@@ -167,7 +153,7 @@ export default function ProductsClient({
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-2 mt-8">
                     <button
                       onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
+                      disabled={page === 1 || loading}
                       className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors font-medium"
                     >
                       Previous
@@ -190,7 +176,8 @@ export default function ProductsClient({
                           <button
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
-                            className={`px-4 py-2 rounded-lg border font-medium transition-colors ${
+                            disabled={loading}
+                            className={`px-4 py-2 rounded-lg border font-medium transition-colors disabled:opacity-50 ${
                               pageNum === page
                                 ? "bg-orange-500 text-white border-orange-500"
                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -204,7 +191,7 @@ export default function ProductsClient({
 
                     <button
                       onClick={() => handlePageChange(page + 1)}
-                      disabled={page === totalPages}
+                      disabled={page === totalPages || loading}
                       className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors font-medium"
                     >
                       Next

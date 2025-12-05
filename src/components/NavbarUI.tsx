@@ -133,7 +133,7 @@ const wishlistCount = useWishlistStore((state) => state.getWishlistCount());
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200  ${
         isScrolled
           ? "bg-white shadow-xl border-b border-gray-100"
           : "bg-white/95 backdrop-blur-xl shadow-lg"

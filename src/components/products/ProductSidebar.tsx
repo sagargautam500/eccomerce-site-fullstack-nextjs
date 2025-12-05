@@ -1,7 +1,7 @@
 // src/components/products/ProductSidebar.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Category, SubCategory } from "@/types/category";
 import { Search, X, Filter } from "lucide-react";
 
@@ -27,51 +27,24 @@ export default function ProductSidebar({
   const [localFilters, setLocalFilters] = useState(filters);
   const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update local filters when props change
+  // Sync local filters with props
   useEffect(() => {
     setLocalFilters(filters);
-  }, [filters]);
+  }, [filters.search, filters.categoryId, filters.subCategoryId, filters.minPrice, filters.maxPrice]);
 
   // Update filtered subcategories when category changes
   useEffect(() => {
     if (localFilters.categoryId) {
-      setFilteredSubCategories(
-        subCategories.filter(sub => sub.categoryId === localFilters.categoryId)
+      const filtered = subCategories.filter(
+        sub => sub.categoryId === localFilters.categoryId
       );
+      setFilteredSubCategories(filtered);
     } else {
-      setFilteredSubCategories(subCategories);
+      setFilteredSubCategories([]);
     }
   }, [localFilters.categoryId, subCategories]);
-
-  // Debounce search input - apply after 500ms of no typing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (localFilters.search !== filters.search) {
-        onFilterChange(localFilters);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [localFilters.search]);
-
-  // Auto-apply filters immediately for non-search fields
-  useEffect(() => {
-    const nonSearchChanged = 
-      localFilters.categoryId !== filters.categoryId ||
-      localFilters.subCategoryId !== filters.subCategoryId ||
-      localFilters.minPrice !== filters.minPrice ||
-      localFilters.maxPrice !== filters.maxPrice;
-
-    if (nonSearchChanged) {
-      onFilterChange(localFilters);
-    }
-  }, [
-    localFilters.categoryId,
-    localFilters.subCategoryId,
-    localFilters.minPrice,
-    localFilters.maxPrice,
-  ]);
 
   const handleChange = (field: string, value: string) => {
     const newFilters = { ...localFilters, [field]: value };
@@ -82,6 +55,19 @@ export default function ProductSidebar({
     }
     
     setLocalFilters(newFilters);
+
+    // For search, debounce the API call
+    if (field === "search") {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      searchTimeoutRef.current = setTimeout(() => {
+        onFilterChange(newFilters);
+      }, 500);
+    } else {
+      // For other filters, apply immediately
+      onFilterChange(newFilters);
+    }
   };
 
   const handleReset = () => {
@@ -95,6 +81,15 @@ export default function ProductSidebar({
     setLocalFilters(resetFilters);
     onFilterChange(resetFilters);
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const hasActiveFilters = 
     localFilters.search ||
@@ -119,10 +114,10 @@ export default function ProductSidebar({
         )}
       </button>
 
-      {/* Sidebar - Only takes space on desktop */}
+      {/* Sidebar */}
       <aside
         className={`
-          w-full lg:w-72 lg:flex-shrink-0
+          w-full lg:w-72 lg:flex-shrink-0 
           fixed lg:sticky 
           top-0 left-0 
           h-full lg:h-auto
@@ -136,9 +131,9 @@ export default function ProductSidebar({
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className="p-6">
+        <div className="p-6 ">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-orange-500" />
               <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
@@ -157,7 +152,6 @@ export default function ProductSidebar({
                 <X className="w-4 h-4" />
                 <span className="hidden sm:inline">Clear</span>
               </button>
-              {/* Mobile close button */}
               <button
                 onClick={() => setIsOpen(false)}
                 className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -167,6 +161,41 @@ export default function ProductSidebar({
               </button>
             </div>
           </div>
+              {/* Active Filters Summary */}
+            {hasActiveFilters && (
+              <div className="pt-1 mb-5  border-t border-gray-200">
+                <p className="text-xs font-medium text-gray-700 mb-2">
+                  Active Filters:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {localFilters.search && (
+                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
+                      Search: {localFilters.search}
+                    </span>
+                  )}
+                  {localFilters.categoryId && categories && (
+                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
+                      {categories.find(c => c.id === localFilters.categoryId)?.name || 'Category'}
+                    </span>
+                  )}
+                  {localFilters.subCategoryId && subCategories && (
+                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
+                      {subCategories.find(s => s.id === localFilters.subCategoryId)?.name || 'Subcategory'}
+                    </span>
+                  )}
+                  {(localFilters.minPrice || localFilters.maxPrice) && (
+                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
+                      Price:{" "}
+                      {localFilters.minPrice && localFilters.maxPrice
+                        ? `NPR ${localFilters.minPrice} - ${localFilters.maxPrice}`
+                        : localFilters.minPrice
+                        ? `From NPR ${localFilters.minPrice}`
+                        : `Up to NPR ${localFilters.maxPrice}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
           <div className="space-y-6">
             {/* Search */}
@@ -190,8 +219,6 @@ export default function ProductSidebar({
               </p>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-200"></div>
 
             {/* Category */}
             <div>
@@ -211,7 +238,7 @@ export default function ProductSidebar({
                 }}
               >
                 <option value="">All Categories</option>
-                {categories.map((category) => (
+                {categories && categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -227,7 +254,7 @@ export default function ProductSidebar({
               <select
                 value={localFilters.subCategoryId}
                 onChange={(e) => handleChange("subCategoryId", e.target.value)}
-                disabled={!localFilters.categoryId}
+                disabled={!localFilters.categoryId || filteredSubCategories.length === 0}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all appearance-none bg-white cursor-pointer"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
@@ -238,7 +265,7 @@ export default function ProductSidebar({
                 }}
               >
                 <option value="">All Subcategories</option>
-                {filteredSubCategories.map((subCategory) => (
+                {filteredSubCategories && filteredSubCategories.map((subCategory) => (
                   <option key={subCategory.id} value={subCategory.id}>
                     {subCategory.name}
                   </option>
@@ -250,9 +277,6 @@ export default function ProductSidebar({
                 </p>
               )}
             </div>
-
-            {/* Divider */}
-            <div className="border-t border-gray-200"></div>
 
             {/* Price Range */}
             <div>
@@ -267,6 +291,7 @@ export default function ProductSidebar({
                       value={localFilters.minPrice}
                       onChange={(e) => handleChange("minPrice", e.target.value)}
                       placeholder="Min"
+                      min="0"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -277,6 +302,7 @@ export default function ProductSidebar({
                       value={localFilters.maxPrice}
                       onChange={(e) => handleChange("maxPrice", e.target.value)}
                       placeholder="Max"
+                      min="0"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -292,32 +318,6 @@ export default function ProductSidebar({
                 )}
               </div>
             </div>
-
-            {/* Active Filters Summary */}
-            {hasActiveFilters && (
-              <div className="pt-4 border-t border-gray-200">
-                <p className="text-xs font-medium text-gray-700 mb-2">
-                  Active Filters:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {localFilters.search && (
-                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
-                      Search: {localFilters.search}
-                    </span>
-                  )}
-                  {localFilters.categoryId && (
-                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
-                      {categories.find(c => c.id === localFilters.categoryId)?.name}
-                    </span>
-                  )}
-                  {localFilters.subCategoryId && (
-                    <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-full">
-                      {subCategories.find(s => s.id === localFilters.subCategoryId)?.name}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Mobile Apply Button */}
             <button

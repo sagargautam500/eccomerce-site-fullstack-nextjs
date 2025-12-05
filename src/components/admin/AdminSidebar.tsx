@@ -1,4 +1,3 @@
-// src/components/admin/AdminSidebar.tsx
 "use client";
 
 import { useState } from "react";
@@ -9,13 +8,13 @@ import {
   Users,
   Package,
   ShoppingCart,
-  Settings,
   Menu,
   X,
   ChevronDown,
   Home,
   BarChart3,
   Tag,
+  Contact,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,16 +32,8 @@ export default function AdminSidebar() {
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   const navItems: NavItem[] = [
-    {
-      label: "Dashboard",
-      href: "/admin",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Users",
-      href: "/admin/users",
-      icon: Users,
-    },
+    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Users", href: "/admin/users", icon: Users },
     {
       label: "Products",
       href: "/admin/products",
@@ -54,40 +45,27 @@ export default function AdminSidebar() {
     },
     { label: "Categories", href: "/admin/categories", icon: Tag },
     { label: "Sub Categories", href: "/admin/subcategories", icon: Tag },
-    {
-      label: "Orders",
-      href: "/admin/orders",
-      icon: ShoppingCart,
-      badge: 5,
-    },
+    { label: "Orders", href: "/admin/orders", icon: ShoppingCart, badge: 5 },
+    { label: "Contact", href: "/admin/contact", icon: Contact },
   ];
 
-  const isActive = (href: string) => {
-    if (href === "/admin") {
-      return pathname === href;
-    }
-    return pathname.startsWith(href);
-  };
+  const isActive = (href: string) =>
+    href === "/admin" ? pathname === href : pathname.startsWith(href);
 
-  const toggleExpanded = (label: string) => {
+  const toggleExpanded = (label: string) =>
     setExpandedItem(expandedItem === label ? null : label);
-  };
 
   return (
     <>
-      {/* Mobile Menu Button - Position adjusted to avoid navbar */}
+      {/* Mobile Hamburger */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
         className="lg:hidden fixed top-20 left-4 z-50 p-2.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg shadow-lg hover:shadow-xl transition-all"
       >
-        {isMobileOpen ? (
-          <X className="w-5 h-5" />
-        ) : (
-          <Menu className="w-5 h-5" />
-        )}
+        {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {isMobileOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-30 mt-18"
@@ -95,14 +73,14 @@ export default function AdminSidebar() {
         />
       )}
 
-      {/* Sidebar - Position adjusted for navbar */}
+      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-18 left-0 h-[calc(100vh-4.5rem)] bg-gradient-to-b from-gray-900 to-gray-800 text-white w-64 transform transition-transform duration-300 ease-in-out z-40 flex flex-col",
+          "hidden mt-15 lg:flex lg:flex-col lg:w-64 lg:sticky lg:top-0 lg:h-screen lg:bg-gray-900 lg:text-white lg:shadow-md z-40 transform transition-transform duration-300",
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        {/* Logo/Title */}
+        {/* Logo */}
         <div className="p-6 border-b border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -119,12 +97,12 @@ export default function AdminSidebar() {
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
           {navItems.map((item) => {
             const isItemActive = isActive(item.href);
-            const hasSubItems = item.subItems && item.subItems.length > 0;
+            const hasSubItems = !!item.subItems?.length;
             const isExpanded = expandedItem === item.label;
 
             return (
               <div key={item.label}>
-                {/* Main Nav Item */}
+                {/* Main Item */}
                 {hasSubItems ? (
                   <button
                     onClick={() => toggleExpanded(item.label)}
@@ -179,7 +157,7 @@ export default function AdminSidebar() {
                 {/* Sub Items */}
                 {hasSubItems && isExpanded && (
                   <div className="mt-1 ml-4 space-y-1 border-l-2 border-gray-700 pl-4">
-                    {item.subItems.map((subItem) => (
+                    {item.subItems!.map((subItem) => (
                       <Link
                         key={subItem.href}
                         href={subItem.href}
@@ -201,7 +179,7 @@ export default function AdminSidebar() {
           })}
         </nav>
 
-        {/* Bottom Section - Back to Store */}
+        {/* Bottom: Back to Store */}
         <div className="p-4 border-t border-gray-700">
           <Link
             href="/"
