@@ -51,7 +51,6 @@ export default function CategoriesPage() {
   const [newCategory, setNewCategory] = useState({ name: "", image: "" });
   const [editCategory, setEditCategory] = useState({ name: "", image: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   // Debounce search
   useEffect(() => {
@@ -89,8 +88,6 @@ export default function CategoriesPage() {
     }
   };
 
-  // ... (keep all your existing handler functions: handleAddCategory, handleUpdateCategory, handleDeleteCategory)
-
   const handleAddCategory = async () => {
     if (!newCategory.name.trim()) {
       toast.error("Category name is required");
@@ -105,7 +102,7 @@ export default function CategoriesPage() {
       toast.success("Category added successfully");
       setShowAddModal(false);
       setNewCategory({ name: "", image: "" });
-      fetchCategories(); // ✅ refresh
+      fetchCategories();
     } catch (error: any) {
       toast.error(error.message || "Failed to add category");
     } finally {
@@ -127,7 +124,7 @@ export default function CategoriesPage() {
       toast.success("Category updated successfully");
       setEditingCategory(null);
       setEditCategory({ name: "", image: "" });
-      fetchCategories(); // ✅ refresh
+      fetchCategories();
     } catch (error: any) {
       toast.error(error.message || "Failed to update category");
     } finally {
@@ -154,17 +151,15 @@ export default function CategoriesPage() {
     try {
       await deleteCategory(id);
       toast.success("Category deleted successfully");
-      fetchCategories(); // ✅ refresh
+      fetchCategories();
     } catch (error: any) {
       toast.error(error.message || "Failed to delete category");
     }
   };
 
-  // Stats (computed from all categories in DB, not just current page)
   const totalProducts = categories.reduce((sum, cat) => sum + cat.productCount, 0);
   const totalSubCategories = categories.reduce((sum, cat) => sum + cat.subCategoryCount, 0);
 
-  // Loading
   if (loading && categories.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -173,314 +168,323 @@ export default function CategoriesPage() {
     );
   }
 
+  // ✅ FULL FIX: Add responsive container wrapper
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-            <p className="text-gray-500 mt-1">
-              Manage product categories ({totalCategories} total)
-            </p>
+    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Categories</h1>
+              <p className="text-gray-500 mt-1">
+                Manage product categories ({totalCategories} total)
+              </p>
+            </div>
           </div>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-pink-600 shadow-md"
-        >
-          <Plus className="w-5 h-5" />
-          Add Category
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white rounded-lg border p-4">
-        <div className="relative max-w-md">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search categories by name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-          />
-        </div>
-      </div>
-
-      {/* Stats */}
-      {categories.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 border">
-            <p className="text-sm text-gray-600">Total Categories</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{totalCategories}</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 border">
-            <p className="text-sm text-gray-600">Total Subcategories</p>
-            <p className="text-2xl font-bold text-purple-600 mt-1">{totalSubCategories}</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 border">
-            <p className="text-sm text-gray-600">Total Products</p>
-            <p className="text-2xl font-bold text-orange-600 mt-1">{totalProducts}</p>
-          </div>
-          <div className="bg-white rounded-lg p-4 border">
-            <p className="text-sm text-gray-600">This Page</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">
-              {categories.length} categories
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((category) => (
-          /* ... your existing category card JSX (no changes needed) ... */
-          <div
-            key={category.id}
-            className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-pink-600 shadow-md whitespace-nowrap"
           >
-            {editingCategory === category.id ? (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={editCategory.name}
-                  onChange={(e) =>
-                    setEditCategory({ ...editCategory, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                  placeholder="Category name"
-                  autoFocus
-                />
-                <input
-                  type="text"
-                  value={editCategory.image}
-                  onChange={(e) =>
-                    setEditCategory({ ...editCategory, image: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                  placeholder="Image URL (optional)"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleUpdateCategory(category.id)}
-                    disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm disabled:opacity-50"
-                  >
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingCategory(null);
-                      setEditCategory({ name: "", image: "" });
-                    }}
-                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            <Plus className="w-5 h-5" />
+            Add Category
+          </button>
+        </div>
+
+
+        {/* Stats */}
+        {categories.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg p-4 border">
+              <p className="text-sm text-gray-600">Total Categories</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{totalCategories}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 border">
+              <p className="text-sm text-gray-600">Total Subcategories</p>
+              <p className="text-2xl font-bold text-purple-600 mt-1">{totalSubCategories}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 border">
+              <p className="text-sm text-gray-600">Total Products</p>
+              <p className="text-2xl font-bold text-orange-600 mt-1">{totalProducts}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 border">
+              <p className="text-sm text-gray-600">This Page</p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
+                {categories.length} categories
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="bg-white rounded-lg border p-4">
+          <div className="relative max-w-md">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search categories by name..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+        </div>
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {categories.map((category) => (
+            <div
+              key={category.id}
+              className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow"
+            >
+              {editingCategory === category.id ? (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={editCategory.name}
+                    onChange={(e) =>
+                      setEditCategory({ ...editCategory, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    placeholder="Category name"
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    value={editCategory.image}
+                    onChange={(e) =>
+                      setEditCategory({ ...editCategory, image: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    placeholder="Image URL (optional)"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdateCategory(category.id)}
+                      disabled={submitting}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm disabled:opacity-50"
+                    >
+                      {submitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingCategory(null);
+                        setEditCategory({ name: "", image: "" });
+                      }}
+                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {category.image ? (
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden">
-                        <Image
-                          src={category.image}
-                          alt={category.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="p-2 bg-gradient-to-r from-orange-100 to-pink-100 rounded-lg">
-                        <Tag className="w-6 h-6 text-orange-600" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-bold text-gray-900">{category.name}</h3>
-                      <div className="flex items-center gap-3 mt-1">
-                        <p className="text-xs text-gray-500 flex items-center gap-1">
-                          <Layers className="w-3 h-3" />
-                          {category.subCategoryCount}{" "}
-                          {category.subCategoryCount === 1 ? "sub" : "subs"}
-                        </p>
-                        <p className="text-xs text-gray-500 flex items-center gap-1">
-                          <Package className="w-3 h-3" />
-                          {category.productCount}{" "}
-                          {category.productCount === 1 ? "product" : "products"}
-                        </p>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {category.image ? (
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden">
+                          <Image
+                            src={category.image}
+                            alt={category.name}
+                            fill
+                            className="object-cover"
+                            sizes="40px" // ✅ Add sizes for Image
+                          />
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-gradient-to-r from-orange-100 to-pink-100 rounded-lg">
+                          <Tag className="w-5 h-5 text-orange-600" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-sm sm:text-base">
+                          {category.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Layers className="w-3 h-3" />
+                            {category.subCategoryCount}{" "}
+                            {category.subCategoryCount === 1 ? "sub" : "subs"}
+                          </span>
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Package className="w-3 h-3" />
+                            {category.productCount}{" "}
+                            {category.productCount === 1 ? "product" : "products"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex gap-2">
-                  <Link
-                    href={`/admin/subcategories?categoryId=${category.id}`}
-                    className="flex-1 px-3 py-2 text-center text-xs font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100"
-                  >
-                    Subcategories
-                  </Link>
-                  <Link
-                    href={`/admin/products?categoryId=${category.id}`}
-                    className="flex-1 px-3 py-2 text-center text-xs font-medium text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100"
-                  >
-                    Products
-                  </Link>
-                </div>
+                  <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                    <Link
+                      href={`/admin/subcategories?categoryId=${category.id}`}
+                      className="flex-1 px-2 py-1.5 text-center text-xs font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100"
+                    >
+                      Subcategories
+                    </Link>
+                    <Link
+                      href={`/admin/products?categoryId=${category.id}`}
+                      className="flex-1 px-2 py-1.5 text-center text-xs font-medium text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100"
+                    >
+                      Products
+                    </Link>
+                  </div>
 
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => {
-                      setEditingCategory(category.id);
-                      setEditCategory({
-                        name: category.name,
-                        image: category.image || "",
-                      });
-                    }}
-                    className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm flex items-center justify-center gap-1"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleDeleteCategory(
-                        category.id,
-                        category.name,
-                        category.productCount,
-                        category.subCategoryCount
-                      )
-                    }
-                    className={cn(
-                      "flex-1 p-2 rounded-lg text-sm flex items-center justify-center gap-1",
-                      category.productCount > 0 || category.subCategoryCount > 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-red-600 hover:bg-red-50"
-                    )}
-                    disabled={category.productCount > 0 || category.subCategoryCount > 0}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {categories.length === 0 && !loading && (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <Tag className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">No categories found</p>
-          <p className="text-gray-500 text-sm mt-1">
-            {searchQuery ? "Try a different search term" : "Click 'Add Category' to get started"}
-          </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingCategory(category.id);
+                        setEditCategory({
+                          name: category.name,
+                          image: category.image || "",
+                        });
+                      }}
+                      className="flex-1 p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg text-xs sm:text-sm flex items-center justify-center gap-1"
+                    >
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden xs:inline">Edit</span>
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleDeleteCategory(
+                          category.id,
+                          category.name,
+                          category.productCount,
+                          category.subCategoryCount
+                        )
+                      }
+                      className={cn(
+                        "flex-1 p-1.5 rounded-lg text-xs sm:text-sm flex items-center justify-center gap-1",
+                        category.productCount > 0 || category.subCategoryCount > 0
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-red-600 hover:bg-red-50"
+                      )}
+                      disabled={category.productCount > 0 || category.subCategoryCount > 0}
+                    >
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden xs:inline">Delete</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4">
-          <p className="text-sm text-gray-600">
-            Page {page} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="p-2 border rounded disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="p-2 border rounded disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+        {/* Empty State */}
+        {categories.length === 0 && !loading && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 sm:p-12 text-center">
+            <Tag className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600 font-medium">No categories found</p>
+            <p className="text-gray-500 text-sm mt-1">
+              {searchQuery ? "Try a different search term" : "Click 'Add Category' to get started"}
+            </p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Add Category Modal (unchanged) */}
-      {showAddModal && (
-        /* ... your existing modal JSX ... */
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Add New Category</h2>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+            <p className="text-sm text-gray-600">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
               <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setNewCategory({ name: "", image: "" });
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-2 border rounded disabled:opacity-50"
               >
-                <X className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-2 border rounded disabled:opacity-50"
+              >
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Category Name *</label>
-                <input
-                  type="text"
-                  value={newCategory.name}
-                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                  placeholder="Enter category name"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                  onKeyPress={(e) => e.key === "Enter" && !submitting && handleAddCategory()}
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Category Image URL (Optional)</label>
-                <input
-                  type="text"
-                  value={newCategory.image}
-                  onChange={(e) => setNewCategory({ ...newCategory, image: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div className="flex gap-3">
+          </div>
+        )}
+
+        {/* Add Category Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Add New Category</h2>
                 <button
                   onClick={() => {
                     setShowAddModal(false);
                     setNewCategory({ name: "", image: "" });
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  Cancel
+                  <X className="w-5 h-5" />
                 </button>
-                <button
-                  onClick={handleAddCategory}
-                  disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-pink-600 flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    "Add Category"
-                  )}
-                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category Name *</label>
+                  <input
+                    type="text"
+                    value={newCategory.name}
+                    onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                    placeholder="Enter category name"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                    onKeyPress={(e) => e.key === "Enter" && !submitting && handleAddCategory()}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category Image URL (Optional)</label>
+                  <input
+                    type="text"
+                    value={newCategory.image}
+                    onChange={(e) => setNewCategory({ ...newCategory, image: e.target.value })}
+                    placeholder="https://example.com/image.jpg  "
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setNewCategory({ name: "", image: "" });
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddCategory}
+                    disabled={submitting}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-pink-600 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      "Add Category"
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

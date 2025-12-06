@@ -10,6 +10,41 @@ async function isAdmin() {
   return session?.user?.role === "admin";
 }
 
+// Add this inside src/actions/admin/subCategoryActions.ts
+
+// ✅ NEW: Fetch ALL subcategories (no pagination) — for forms & filters
+export async function getAllSubCategoriesFull() {
+  if (!(await isAdmin())) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const subcategories = await prisma.subCategory.findMany({
+      include: {
+        category: { select: { name: true } },
+        _count: { select: { products: true } },
+      },
+      orderBy: { name: "asc" }, // Optional: sort by name
+    });
+
+    return {
+      success: true,
+      subcategories: subcategories.map((sub) => ({
+        id: sub.id,
+        name: sub.name,
+        slug: sub.slug,
+        categoryId: sub.categoryId,
+        categoryName: sub.category?.name || "Unknown",
+        productCount: sub._count.products,
+        createdAt: sub.createdAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("Fetch all subcategories error:", error);
+    throw new Error("Failed to fetch subcategories");
+  }
+}
+
 // GET ALL SUBCATEGORIES WITH COUNTS
 // Add interface
 export interface SubCategoryFilters {

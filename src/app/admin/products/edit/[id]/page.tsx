@@ -1,10 +1,17 @@
 // src/app/admin/products/edit/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, Plus, X, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  Plus,
+  X,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   getAdminProductById,
@@ -12,32 +19,33 @@ import {
   deleteProduct,
 } from "@/actions/admin/productActions";
 import { getAllCategoriesWithCounts } from "@/actions/admin/categoryActions";
-import { getAllSubCategoriesWithCounts } from "@/actions/admin/subCategoryActions";
+import { getAllSubCategoriesFull } from "@/actions/admin/subCategoryActions";
 
-interface Category {
+interface CategoryOption {
   id: string;
   name: string;
 }
 
-interface SubCategory {
+interface SubCategoryOption {
   id: string;
   name: string;
   categoryId: string;
 }
 
-export default function EditProductPage() {
+export default function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // ✅ Unwrap params using React.use() (required in Next.js 15+ Client Components)
+  const { id: productId } = use(params);
   const router = useRouter();
-  const params = useParams();
-  const productId = params.id as string;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [filteredSubCategories, setFilteredSubCategories] = useState<
-    SubCategory[]
-  >([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategoryOption[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -57,77 +65,81 @@ export default function EditProductPage() {
     totalReviews: "",
   });
 
+  // ✅ Fetch product + categories + subcategories
   useEffect(() => {
-    fetchData();
-  }, [productId]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [productResult, catsData, subCatsData] = await Promise.all([
+          getAdminProductById(productId),
+          getAllCategoriesWithCounts(),
+          getAllSubCategoriesFull(), 
+        ]);
+     
 
-  useEffect(() => {
-    if (formData.categoryId) {
-      setFilteredSubCategories(
-        subCategories.filter((sub) => sub.categoryId === formData.categoryId)
-      );
-    } else {
-      setFilteredSubCategories([]);
-    }
-  }, [formData.categoryId, subCategories]);
+        if (!productResult.success || !productResult.product) {
+          toast.error("Product not found");
+          router.push("/admin/products");
+          return;
+        }
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [productResult, catsData, subCatsData] = await Promise.all([
-        getAdminProductById(productId),
-        getAllCategoriesWithCounts(),
-        getAllSubCategoriesWithCounts(),
-      ]);
+        const product = productResult.product;
 
-      if (!productResult.success || !productResult.product) {
-        toast.error("Product not found");
+        // Set form data — ensure nulls become empty strings
+        setFormData({
+          name: product.name || "",
+          description: product.description || "",
+          price: product.price?.toString() || "",
+          originalPrice: product.originalPrice?.toString() || "",
+          brand: product.brand || "",
+          categoryId: product.categoryId || "",
+          subCategoryId: product.subCategoryId || "",
+          isFeatured: !!product.isFeatured,
+          thumbnail: product.thumbnail || "",
+          images: product.images?.length > 0 ? [...product.images] : [""],
+          sizes: product.sizes?.length > 0 ? [...product.sizes] : [""],
+          colors: product.colors?.length > 0 ? [...product.colors] : [""],
+          stock: product.stock?.toString() || "",
+          rating: product.rating?.toString() || "",
+          totalReviews: product.totalReviews?.toString() || "",
+        });
+
+        // Set categories
+        if (catsData.success && Array.isArray(catsData.categories)) {
+          setCategories(
+            catsData.categories.map((cat) => ({
+              id: cat.id,
+              name: cat.name,
+            }))
+          );
+        }
+
+        // Set subcategories
+        if (subCatsData.success && Array.isArray(subCatsData.subcategories)) {
+          setSubCategories(
+            subCatsData.subcategories.map((sub) => ({
+              id: sub.id,
+              name: sub.name,
+              categoryId: sub.categoryId,
+            }))
+          );
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch product data:", error);
+        toast.error("Failed to load product. Please try again.");
         router.push("/admin/products");
-        return;
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const product = productResult.product;
+    fetchData();
+  }, [productId, router]);
 
-      setFormData({
-        name: product.name,
-        description: product.description,
-        price: product.price.toString(),
-        originalPrice: product.originalPrice?.toString() || "",
-        brand: product.brand || "",
-        categoryId: product.categoryId || "",
-        subCategoryId: product.subCategoryId || "",
-        isFeatured: product.isFeatured,
-        thumbnail: product.thumbnail,
-        images: product.images.length > 0 ? product.images : [""],
-        sizes: product.sizes.length > 0 ? product.sizes : [""],
-        colors: product.colors.length > 0 ? product.colors : [""],
-        stock: product.stock.toString(),
-        rating: product.rating?.toString() || "",
-        totalReviews: product.totalReviews?.toString() || "",
-      });
 
-      setCategories(
-        catsData.map((cat: Category) => ({
-          id: cat.id,
-          name: cat.name,
-        }))
-      );
-      setSubCategories(
-        subCatsData.map((sub: SubCategory) => ({
-          id: sub.id,
-          name: sub.name,
-          categoryId: sub.categoryId,
-        }))
-      );
-    } catch (error: any) {
-      console.error("Failed to fetch data:", error);
-      toast.error(error.message || "Failed to load product");
-      router.push("/admin/products");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ✅ Compute filtered subcategories IN RENDER (no useEffect timing issues)
+  const filteredSubCategories =subCategories.filter((sub) => sub.categoryId === formData.categoryId)
+    
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -190,9 +202,9 @@ export default function EditProductPage() {
       const data = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        price: parseInt(formData.price),
+        price: parseInt(formData.price, 10),
         originalPrice: formData.originalPrice
-          ? parseInt(formData.originalPrice)
+          ? parseInt(formData.originalPrice, 10)
           : undefined,
         brand: formData.brand.trim() || undefined,
         categoryId: formData.categoryId,
@@ -202,10 +214,10 @@ export default function EditProductPage() {
         images: formData.images.filter((img) => img.trim() !== ""),
         sizes: formData.sizes.filter((size) => size.trim() !== ""),
         colors: formData.colors.filter((color) => color.trim() !== ""),
-        stock: parseInt(formData.stock),
-        rating: formData.rating ? parseInt(formData.rating) : undefined,
+        stock: parseInt(formData.stock, 10),
+        rating: formData.rating ? parseInt(formData.rating, 10) : undefined,
         totalReviews: formData.totalReviews
-          ? parseInt(formData.totalReviews)
+          ? parseInt(formData.totalReviews, 10)
           : undefined,
       };
 
@@ -213,7 +225,7 @@ export default function EditProductPage() {
       toast.success(result.message || "Product updated successfully!");
       router.push("/admin/products");
     } catch (error: any) {
-      console.error("Update product error:", error);
+      console.error("Update error:", error);
       toast.error(error.message || "Failed to update product");
     } finally {
       setSubmitting(false);
@@ -236,7 +248,7 @@ export default function EditProductPage() {
       toast.success(result.message || "Product deleted successfully!");
       router.push("/admin/products");
     } catch (error: any) {
-      console.error("Delete product error:", error);
+      console.error("Delete error:", error);
       toast.error(error.message || "Failed to delete product");
       setDeleting(false);
     }
@@ -262,7 +274,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -349,26 +361,6 @@ export default function EditProductPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sub-Category<span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="subCategoryId"
-                  value={formData.subCategoryId}
-                  onChange={handleChange}
-                  disabled={!formData.categoryId}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-                  required
-                >
-                  <option value="">Select subcategory</option>
-                  {filteredSubCategories.map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -389,58 +381,36 @@ export default function EditProductPage() {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sub-Category
+                </label>
+                <select
+                  name="subCategoryId"
+                  value={formData.subCategoryId}
+                  onChange={handleChange}
+                  disabled={!formData.categoryId}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+                >
+                  <option value="">Select subcategory</option>
+                  {filteredSubCategories.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </select>
+                {!formData.categoryId && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Please select a category first
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Reviews & Rating */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
-            Reviews & Rating
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rating (0-5)
-              </label>
-              <input
-                type="number"
-                name="rating"
-                value={formData.rating}
-                onChange={handleChange}
-                placeholder="0.0"
-                min="0"
-                max="5"
-                step="0.1"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter rating between 0 and 5
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Reviews
-              </label>
-              <input
-                type="number"
-                name="totalReviews"
-                value={formData.totalReviews}
-                onChange={handleChange}
-                placeholder="0"
-                min="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Total number of reviews
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Pricing */}
+        {/* Pricing & Stock */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">
             Pricing & Stock
@@ -498,9 +468,7 @@ export default function EditProductPage() {
             <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-700">
                 Discount: {discount}% OFF (Save NPR{" "}
-                {(
-                  parseInt(formData.originalPrice) - parseInt(formData.price)
-                ).toLocaleString()}
+                {(parseInt(formData.originalPrice) - parseInt(formData.price)).toLocaleString()}
                 )
               </p>
             </div>
@@ -570,7 +538,6 @@ export default function EditProductPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Variants</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Sizes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sizes
@@ -609,7 +576,6 @@ export default function EditProductPage() {
               </div>
             </div>
 
-            {/* Colors */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Colors

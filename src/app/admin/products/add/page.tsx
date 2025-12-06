@@ -8,7 +8,7 @@ import { ArrowLeft, Save, Loader2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { createProduct } from "@/actions/admin/productActions";
 import { getAllCategoriesWithCounts } from "@/actions/admin/categoryActions";
-import { getAllSubCategoriesWithCounts } from "@/actions/admin/subCategoryActions";
+import { getAllSubCategoriesFull } from "@/actions/admin/subCategoryActions";
 
 interface Category {
   id: string;
@@ -72,8 +72,8 @@ export default function AddProductPage() {
   const fetchCategories = async () => {
     try {
       const [catsData, subCatsData] = await Promise.all([
-        getAllCategoriesWithCounts(),
-        getAllSubCategoriesWithCounts(),
+        getAllCategoriesWithCounts({ limit: 100 }),
+        getAllSubCategoriesFull(),
       ]);
       setCategories(
         catsData.categories.map((cat) => ({

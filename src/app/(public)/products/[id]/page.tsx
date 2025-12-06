@@ -1,15 +1,23 @@
-// src/app/products/[id]/page.tsx
+// src/app/(public)/products/[id]/page.tsx
 import { getProductById, getRelatedProducts } from "@/actions/api/productApi";
 import ProductCard from "@/components/products/ProductCard";
 import ProductDetails from "@/components/products/ProductDetails";
 import { notFound } from "next/navigation";
 
+// ✅ Make the component async and await params
 export default async function ProductDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>; // ✅ Type as Promise
 }) {
-  const product = await getProductById(params.id);
+  // ✅ AWAIT params to get the actual object
+  const { id } = await params;
+
+  if (!id || id === "undefined" || id === "null") {
+    notFound();
+  }
+
+  const product = await getProductById(id);
 
   if (!product) {
     notFound();
@@ -39,14 +47,22 @@ export default async function ProductDetailsPage({
   );
 }
 
-// Generate metadata for SEO
+// ✅ Also fix generateMetadata
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>; // ✅ Promise type
 }) {
+  // ✅ AWAIT params
+  const { id } = await params;
+
+  if (!id || id === "undefined" || id === "null") {
+    return {
+      title: "Product Not Found - Chimteshwar Shop",
+    };
+  }
+
   try {
-    const { id } = await params;
     const product = await getProductById(id);
 
     if (!product) {
@@ -57,20 +73,26 @@ export async function generateMetadata({
 
     return {
       title: `${product.name} - Chimteshwar Shop`,
-      description: product.description,
+      description: product.description?.substring(0, 160) || "Shop premium products in Nepal",
       openGraph: {
         title: product.name,
-        description: product.description,
+        description: product.description?.substring(0, 160) || "Shop premium products in Nepal",
         images: [
-          product.thumbnail?.startsWith("http")
-            ? product.thumbnail
-            : `/products/${product.thumbnail}`,
+          {
+            url: product.thumbnail?.startsWith("http")
+              ? product.thumbnail
+              : `/products/${product.thumbnail}`,
+            width: 800,
+            height: 600,
+            alt: product.name,
+          },
         ],
       },
     };
   } catch (error) {
     return {
       title: "Product - Chimteshwar Shop",
+      description: "Shop premium products in Nepal",
     };
   }
 }
