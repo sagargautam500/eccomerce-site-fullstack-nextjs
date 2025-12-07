@@ -1,9 +1,10 @@
-// src/action/admin/categoryActions.ts
+// src/actions/admin/categoryActions.ts
 "use server";
 
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { deleteImageFile } from "@/lib/deleteImage";
 
 async function isAdmin() {
   const session = await auth();
@@ -11,14 +12,12 @@ async function isAdmin() {
 }
 
 // GET ALL CATEGORIES WITH COUNTS
-// Add this interface near the top
 export interface CategoryFilters {
   page?: number;
   limit?: number;
   search?: string;
 }
 
-// Replace your existing getAllCategoriesWithCounts
 export async function getAllCategoriesWithCounts(filters: CategoryFilters = {}) {
   if (!(await isAdmin())) {
     throw new Error("Unauthorized");
@@ -127,6 +126,17 @@ export async function updateCategory(id: string, data: { name: string; image?: s
       throw new Error("Category with this name already exists");
     }
 
+    // Get old category data to check for image changes
+    const oldCategory = await prisma.category.findUnique({
+      where: { id },
+      select: { image: true },
+    });
+
+    if (!oldCategory) {
+      throw new Error("Category not found");
+    }
+
+    // Update category
     const category = await prisma.category.update({
       where: { id },
       data: { 
@@ -135,6 +145,15 @@ export async function updateCategory(id: string, data: { name: string; image?: s
         image: data.image || null 
       },
     });
+
+    // Delete old image if it was replaced with a new one
+    if (
+      oldCategory.image && 
+      oldCategory.image !== data.image &&
+      oldCategory.image.startsWith("/uploads/")
+    ) {
+      await deleteImageFile(oldCategory.image);
+    }
 
     revalidatePath("/admin/categories");
     return { success: true, category };
@@ -180,7 +199,13 @@ export async function deleteCategory(id: string) {
       );
     }
 
+    // Delete category from database
     await prisma.category.delete({ where: { id } });
+
+    // Delete associated image file if it exists
+    if (category.image && category.image.startsWith("/uploads/")) {
+      await deleteImageFile(category.image);
+    }
 
     revalidatePath("/admin/categories");
     return { success: true, message: "Category deleted successfully" };

@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { createProduct } from "@/actions/admin/productActions";
 import { getAllCategoriesWithCounts } from "@/actions/admin/categoryActions";
 import { getAllSubCategoriesFull } from "@/actions/admin/subCategoryActions";
+import ImageUpload from "@/components/admin/ImageUpload";
+import MultipleImageUpload from "@/components/admin/MultipleImageUpload";
 
 interface Category {
   id: string;
@@ -40,7 +42,7 @@ export default function AddProductPage() {
     subCategoryId: "",
     isFeatured: false,
     thumbnail: "",
-    images: [""],
+    images: [] as string[],
     sizes: [""],
     colors: [""],
     stock: "",
@@ -110,7 +112,7 @@ export default function AddProductPage() {
   const handleArrayChange = (
     index: number,
     value: string,
-    field: "images" | "sizes" | "colors"
+    field: "sizes" | "colors"
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -118,17 +120,14 @@ export default function AddProductPage() {
     }));
   };
 
-  const addArrayItem = (field: "images" | "sizes" | "colors") => {
+  const addArrayItem = (field: "sizes" | "colors") => {
     setFormData((prev) => ({
       ...prev,
       [field]: [...prev[field], ""],
     }));
   };
 
-  const removeArrayItem = (
-    index: number,
-    field: "images" | "sizes" | "colors"
-  ) => {
+  const removeArrayItem = (index: number, field: "sizes" | "colors") => {
     setFormData((prev) => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
@@ -439,62 +438,27 @@ export default function AddProductPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Images</h2>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Thumbnail Image <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="thumbnail"
-                value={formData.thumbnail}
-                onChange={handleChange}
-                placeholder="Enter image URL or filename (e.g., product-1.jpg)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This will be the main product image
-              </p>
-            </div>
+          <div className="space-y-6">
+            {/* Thumbnail Image */}
+            <ImageUpload
+              value={formData.thumbnail}
+              onChange={(url) =>
+                setFormData((prev) => ({ ...prev, thumbnail: url }))
+              }
+              label="Thumbnail Image"
+              required
+              helperText="This will be the main product image"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Additional Images
-              </label>
-              <div className="space-y-2">
-                {formData.images.map((img, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={img}
-                      onChange={(e) =>
-                        handleArrayChange(index, e.target.value, "images")
-                      }
-                      placeholder="Enter image URL or filename"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                    {formData.images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem(index, "images")}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addArrayItem("images")}
-                  className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Image
-                </button>
-              </div>
-            </div>
+            {/* Additional Images */}
+            <MultipleImageUpload
+              images={formData.images}
+              onChange={(images) =>
+                setFormData((prev) => ({ ...prev, images }))
+              }
+              label="Additional Images"
+              maxImages={10}
+            />
           </div>
         </div>
 

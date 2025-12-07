@@ -1,9 +1,10 @@
-// src/action/admin/productActions.ts
+// src/actions/admin/productActions.ts
 "use server";
 
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { deleteMultipleImageFiles } from "@/lib/deleteImage";
 
 // Types
 export interface ProductFilters {
@@ -23,15 +24,15 @@ export interface ProductFormData {
   originalPrice?: number;
   brand?: string;
   categoryId: string;
-  subCategoryId: string; // Now required
+  subCategoryId: string;
   isFeatured: boolean;
   thumbnail: string;
   images: string[];
   sizes: string[];
   colors: string[];
   stock: number;
-  rating?: number; // Add this
-  totalReviews?: number; // Add this
+  rating?: number;
+  totalReviews?: number;
 }
 
 // Check if user is admin
@@ -42,7 +43,6 @@ async function isAdmin() {
 
 // ============================================
 // ADMIN-ONLY: GET PRODUCTS WITH PAGINATION & FILTERS
-// (This is admin-specific because it includes pagination and admin filters)
 // ============================================
 export async function getAllProducts(filters: ProductFilters = {}) {
   try {
@@ -186,7 +186,6 @@ export async function getProductStats() {
 
 // ============================================
 // ADMIN-ONLY: GET SINGLE PRODUCT WITH ADMIN DATA
-// (Includes wishlist count, cart items count, etc.)
 // ============================================
 export async function getAdminProductById(productId: string) {
   try {
@@ -304,7 +303,7 @@ export async function updateProduct(productId: string, data: ProductFormData) {
       throw new Error("Unauthorized");
     }
 
-    // Check if product exists
+    // Check if product exists and get old images
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -340,6 +339,22 @@ export async function updateProduct(productId: string, data: ProductFormData) {
       }
     }
 
+    // Find images to delete (old images not in new data)
+    const oldImages = [
+      existingProduct.thumbnail,
+      ...existingProduct.images,
+    ].filter(Boolean);
+    
+    const newImages = [
+      data.thumbnail,
+      ...data.images,
+    ].filter(Boolean);
+
+    const imagesToDelete = oldImages.filter(
+      (oldImg) => !newImages.includes(oldImg)
+    );
+
+    // Update product
     const product = await prisma.product.update({
       where: { id: productId },
       data: {
@@ -360,6 +375,11 @@ export async function updateProduct(productId: string, data: ProductFormData) {
         totalReviews: data.totalReviews || 0,
       },
     });
+
+    // Delete old images after successful update
+    if (imagesToDelete.length > 0) {
+      await deleteMultipleImageFiles(imagesToDelete);
+    }
 
     revalidatePath("/admin/products");
     revalidatePath("/admin/categories");
@@ -391,9 +411,21 @@ export async function deleteProduct(productId: string) {
       throw new Error("Product not found");
     }
 
+    // Collect all images to delete
+    const imagesToDelete = [
+      product.thumbnail,
+      ...product.images,
+    ].filter(Boolean);
+
+    // Delete product from database
     await prisma.product.delete({
       where: { id: productId },
     });
+
+    // Delete associated image files
+    if (imagesToDelete.length > 0) {
+      await deleteMultipleImageFiles(imagesToDelete);
+    }
 
     revalidatePath("/admin/products");
     revalidatePath("/admin/categories");
@@ -420,11 +452,39 @@ export async function bulkDeleteProducts(productIds: string[]) {
       throw new Error("No products selected");
     }
 
+    // Get all products to collect their images
+    const products = await prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+      },
+      select: {
+        thumbnail: true,
+        images: true,
+      },
+    });
+
+    // Collect all images to delete
+    const allImagesToDelete: string[] = [];
+    products.forEach((product) => {
+      if (product.thumbnail) {
+        allImagesToDelete.push(product.thumbnail);
+      }
+      if (product.images && product.images.length > 0) {
+        allImagesToDelete.push(...product.images);
+      }
+    });
+
+    // Delete products from database
     await prisma.product.deleteMany({
       where: {
         id: { in: productIds },
       },
     });
+
+    // Delete associated image files
+    if (allImagesToDelete.length > 0) {
+      await deleteMultipleImageFiles(allImagesToDelete);
+    }
 
     revalidatePath("/admin/products");
     revalidatePath("/admin/categories");

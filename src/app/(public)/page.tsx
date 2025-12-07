@@ -30,7 +30,7 @@ export default async function HomePage() {
   ]);
 
   const newArrivals = allProductsData.products.slice(0, 4);
-  const trendingProducts = allProductsData.products.slice(4, 8);
+ 
 
   return (
     <div className="min-h-screen mt-4 overflow-x-hidden">
@@ -385,7 +385,7 @@ export default async function HomePage() {
             <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
               Subscribe for deals, new arrivals, and insider tips
             </p>
-            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <form  method="post" className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"
                 placeholder="Enter your email"

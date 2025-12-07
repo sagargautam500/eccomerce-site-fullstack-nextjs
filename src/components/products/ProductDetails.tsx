@@ -43,8 +43,14 @@ const ImageGallery = ({
   discount: number;
   isFeatured: boolean;
 }) => {
-  const getImageSrc = (img: string) =>
-    img?.startsWith("http") ? img : `/products/${img}`;
+  const getImageSrc = (img: string) => {
+  if (!img) return "/placeholder.png";
+
+  // Case 1: Already full path like /uploads/products/file.jpg
+  if (img.startsWith("/")) return img;
+  // Case 2: Only filename like product-123.jpg
+  return `/products/${img}`;
+};
 
   return (
     <div className="space-y-3">

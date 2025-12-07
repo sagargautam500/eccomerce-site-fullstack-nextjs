@@ -60,7 +60,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen mt-8 bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <SignupHeader />
 
@@ -168,7 +168,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || !isValid}
-              className="w-full flex justify-center py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              className="w-full flex justify-center py-2 px-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-md hover:from-orange-600 hover:to-pink-600 disabled:opacity-50"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>

@@ -78,7 +78,7 @@ export default function SigninForm({ form, onSubmit, loading, onForgotPassword }
             id="remember-me"
             name="remember-me"
             type="checkbox"
-            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
           />
           <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
             Remember me
@@ -89,7 +89,7 @@ export default function SigninForm({ form, onSubmit, loading, onForgotPassword }
           <button
             type="button"
             onClick={onForgotPassword}
-            className="font-medium text-indigo-600 hover:text-indigo-500"
+            className="font-medium text-orange-600 hover:text-orange-500"
           >
             Forgot your password?
           </button>
@@ -101,7 +101,7 @@ export default function SigninForm({ form, onSubmit, loading, onForgotPassword }
         <button
           type="submit"
           disabled={loading || !form.formState.isValid}
-          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <div className="flex items-center">

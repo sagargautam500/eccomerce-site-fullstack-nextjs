@@ -239,7 +239,6 @@ export default function AdminProductsPage() {
       }
     });
   };
-
   const toggleSelectProduct = (id: string) => {
     setSelectedProducts((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
@@ -279,11 +278,16 @@ export default function AdminProductsPage() {
     setPage(1);
   };
 
-  const getImageSrc = (thumbnail: string) => {
-    return thumbnail?.startsWith("http")
-      ? thumbnail
-      : `/products/${thumbnail}`;
-  };
+const getImageSrc = (thumbnail: string) => {
+  if (!thumbnail) return "/placeholder.png";
+
+  // Case 1: Already full path like /uploads/products/file.jpg
+  if (thumbnail.startsWith("/")) return thumbnail;
+
+  // Case 2: Only filename like product-123.jpg
+  return `/products/${thumbnail}`;
+};
+
 
   const hasActiveFilters =
     searchQuery || selectedCategoryId !== "all" || selectedSubCategoryId !== "all" || sortBy !== "newest";
@@ -580,6 +584,7 @@ export default function AdminProductsPage() {
                           <div className="relative w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                             <Image
                               src={getImageSrc(product.thumbnail)}
+                              // src={product.thumbnail}
                               alt={product.name}
                               fill
                               className="object-cover"

@@ -12,18 +12,32 @@ interface ProductCardProps {
   subCategoryName?: string;
 }
 
-export default function ProductCard({ product, categoryName, subCategoryName }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  categoryName,
+  subCategoryName,
+}: ProductCardProps) {
   const discountPercentage =
     product.originalPrice && product.originalPrice > product.price
       ? Math.round(
-          ((product.originalPrice - product.price) / product.originalPrice) * 100
+          ((product.originalPrice - product.price) / product.originalPrice) *
+            100
         )
       : 0;
 
-  // Build safe image URL
-  const imageSrc = product.thumbnail?.startsWith("http")
-    ? product.thumbnail
-    : `/products/${product.thumbnail}`;
+const getImageSrc = (thumbnail: string) => {
+  if (!thumbnail) return "/placeholder.png";
+
+  // External URL
+  if (thumbnail.startsWith("http")) return thumbnail;
+
+  // Full local path: /uploads/products/file.jpg
+  if (thumbnail.startsWith("/upload")) return thumbnail;
+
+  // Only filename: product-123.jpg
+  return `/products/${thumbnail}`;
+};
+
 
   return (
     <Link href={`/products/${product.id}`}>
@@ -31,7 +45,7 @@ export default function ProductCard({ product, categoryName, subCategoryName }: 
         {/* Product Image */}
         <div className="relative w-full h-48 sm:h-52 overflow-hidden bg-gray-50">
           <Image
-            src={imageSrc}
+            src={getImageSrc(product.thumbnail)}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -76,9 +90,13 @@ export default function ProductCard({ product, categoryName, subCategoryName }: 
           {product.rating && (
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-              <span className="text-xs text-gray-700 font-medium">{product.rating}</span>
+              <span className="text-xs text-gray-700 font-medium">
+                {product.rating}
+              </span>
               {product.totalReviews && (
-                <span className="text-xs text-gray-400">({product.totalReviews})</span>
+                <span className="text-xs text-gray-400">
+                  ({product.totalReviews})
+                </span>
               )}
             </div>
           )}

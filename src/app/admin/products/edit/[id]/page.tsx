@@ -20,6 +20,8 @@ import {
 } from "@/actions/admin/productActions";
 import { getAllCategoriesWithCounts } from "@/actions/admin/categoryActions";
 import { getAllSubCategoriesFull } from "@/actions/admin/subCategoryActions";
+import ImageUpload from "@/components/admin/ImageUpload";
+import MultipleImageUpload from "@/components/admin/MultipleImageUpload";
 
 interface CategoryOption {
   id: string;
@@ -57,7 +59,7 @@ export default function EditProductPage({
     subCategoryId: "",
     isFeatured: false,
     thumbnail: "",
-    images: [""],
+    images: [] as string[],
     sizes: [""],
     colors: [""],
     stock: "",
@@ -73,9 +75,8 @@ export default function EditProductPage({
         const [productResult, catsData, subCatsData] = await Promise.all([
           getAdminProductById(productId),
           getAllCategoriesWithCounts(),
-          getAllSubCategoriesFull(), 
+          getAllSubCategoriesFull(),
         ]);
-     
 
         if (!productResult.success || !productResult.product) {
           toast.error("Product not found");
@@ -96,7 +97,7 @@ export default function EditProductPage({
           subCategoryId: product.subCategoryId || "",
           isFeatured: !!product.isFeatured,
           thumbnail: product.thumbnail || "",
-          images: product.images?.length > 0 ? [...product.images] : [""],
+          images: product.images?.length > 0 ? [...product.images] : [],
           sizes: product.sizes?.length > 0 ? [...product.sizes] : [""],
           colors: product.colors?.length > 0 ? [...product.colors] : [""],
           stock: product.stock?.toString() || "",
@@ -136,10 +137,11 @@ export default function EditProductPage({
     fetchData();
   }, [productId, router]);
 
-
   // ✅ Compute filtered subcategories IN RENDER (no useEffect timing issues)
-  const filteredSubCategories =subCategories.filter((sub) => sub.categoryId === formData.categoryId)
-    
+  const filteredSubCategories = subCategories.filter(
+    (sub) => sub.categoryId === formData.categoryId
+  );
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -156,7 +158,7 @@ export default function EditProductPage({
   const handleArrayChange = (
     index: number,
     value: string,
-    field: "images" | "sizes" | "colors"
+    field: "sizes" | "colors"
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -164,17 +166,14 @@ export default function EditProductPage({
     }));
   };
 
-  const addArrayItem = (field: "images" | "sizes" | "colors") => {
+  const addArrayItem = (field: "sizes" | "colors") => {
     setFormData((prev) => ({
       ...prev,
       [field]: [...prev[field], ""],
     }));
   };
 
-  const removeArrayItem = (
-    index: number,
-    field: "images" | "sizes" | "colors"
-  ) => {
+  const removeArrayItem = (index: number, field: "sizes" | "colors") => {
     setFormData((prev) => ({
       ...prev,
       [field]: prev[field].filter((_, i) => i !== index),
@@ -215,7 +214,7 @@ export default function EditProductPage({
         sizes: formData.sizes.filter((size) => size.trim() !== ""),
         colors: formData.colors.filter((color) => color.trim() !== ""),
         stock: parseInt(formData.stock, 10),
-        rating: formData.rating ? parseInt(formData.rating, 10) : undefined,
+        rating: formData.rating ? parseFloat(formData.rating) : undefined,
         totalReviews: formData.totalReviews
           ? parseInt(formData.totalReviews, 10)
           : undefined,
@@ -468,69 +467,87 @@ export default function EditProductPage({
             <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-700">
                 Discount: {discount}% OFF (Save NPR{" "}
-                {(parseInt(formData.originalPrice) - parseInt(formData.price)).toLocaleString()}
+                {(
+                  parseInt(formData.originalPrice) - parseInt(formData.price)
+                ).toLocaleString()}
                 )
               </p>
             </div>
           )}
         </div>
 
-        {/* Images */}
+        {/* Reviews & Rating */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Images</h2>
-          <div className="space-y-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">
+            Reviews & Rating
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Thumbnail Image <span className="text-red-500">*</span>
+                Rating (0-5)
               </label>
               <input
-                type="text"
-                name="thumbnail"
-                value={formData.thumbnail}
+                type="number"
+                name="rating"
+                value={formData.rating}
                 onChange={handleChange}
-                placeholder="Enter image URL or filename"
+                placeholder="0.0"
+                min="0"
+                max="5"
+                step="0.1"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                required
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter rating between 0 and 5
+              </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Additional Images
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total Reviews
               </label>
-              <div className="space-y-2">
-                {formData.images.map((img, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={img}
-                      onChange={(e) =>
-                        handleArrayChange(index, e.target.value, "images")
-                      }
-                      placeholder="Enter image URL or filename"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                    {formData.images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem(index, "images")}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addArrayItem("images")}
-                  className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Image
-                </button>
-              </div>
+              <input
+                type="number"
+                name="totalReviews"
+                value={formData.totalReviews}
+                onChange={handleChange}
+                placeholder="0"
+                min="0"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Total number of reviews
+              </p>
             </div>
+          </div>
+        </div>
+
+        {/* Images */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Images</h2>
+
+          <div className="space-y-6">
+            {/* Thumbnail Image */}
+            <ImageUpload
+              value={formData.thumbnail}
+              onChange={(url) =>
+                setFormData((prev) => ({ ...prev, thumbnail: url }))
+              }
+              label="Thumbnail Image"
+              required
+              helperText="This will be the main product image"
+            />
+
+            {/* Additional Images */}
+            <MultipleImageUpload
+              images={formData.images}
+              onChange={(images) =>
+                setFormData((prev) => ({ ...prev, images }))
+              }
+              label="Additional Images"
+              maxImages={10}
+            />
           </div>
         </div>
 

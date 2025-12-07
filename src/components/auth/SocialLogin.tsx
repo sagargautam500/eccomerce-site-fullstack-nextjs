@@ -12,12 +12,12 @@ export default function SocialLogin() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6">
         {/* Google */}
         <button
           type="button"
           onClick={() => handleGoogleSignIn()}
-          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          className="w-full inline-flex justify-center py-3 px-3 border border-gray-300 rounded-md shadow-sm bg-orange-300 text-sm font-medium text-white hover:bg-orange-400"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -38,18 +38,6 @@ export default function SocialLogin() {
             />
           </svg>
           <span className="ml-2">Google</span>
-        </button>
-
-        {/* Facebook */}
-        <button
-          type="button"
-          onClick={() => handleFacebookSignIn()}
-          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.325v21.351C0 23.403.597 24 1.325 24H12.82V14.708h-3.41v-3.62h3.41V8.413c0-3.377 2.064-5.218 5.082-5.218 1.445 0 2.686.107 3.047.155v3.53h-2.09c-1.64 0-1.957.78-1.957 1.924v2.525h3.91l-.51 3.62h-3.4V24h6.673C23.403 24 24 23.403 24 22.676V1.325C24 .597 23.403 0 22.675 0z" />
-          </svg>
-          <span className="ml-2">Facebook</span>
         </button>
       </div>
     </div>

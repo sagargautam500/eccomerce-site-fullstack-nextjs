@@ -94,12 +94,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="text-sm hover:text-orange-500 transition-colors inline-block">
+                <Link href="#" className="text-sm hover:text-orange-500 transition-colors inline-block">
                   Shipping Info
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="text-sm hover:text-orange-500 transition-colors inline-block">
+                <Link href="#" className="text-sm hover:text-orange-500 transition-colors inline-block">
                   Returns & Refunds
                 </Link>
               </li>
@@ -139,13 +139,13 @@ export default function Footer() {
               &copy; {currentYear} Chimteshwar Shop. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-              <Link href="/privacy" className="hover:text-orange-500 transition-colors">
+              <Link href="#" className="hover:text-orange-500 transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="hover:text-orange-500 transition-colors">
+              <Link href="#" className="hover:text-orange-500 transition-colors">
                 Terms of Service
               </Link>
-              <Link href="/cookies" className="hover:text-orange-500 transition-colors">
+              <Link href="#" className="hover:text-orange-500 transition-colors">
                 Cookie Policy
               </Link>
             </div>
