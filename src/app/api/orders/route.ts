@@ -7,7 +7,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     const email = searchParams.get("email");
-    console.log("Fetching orders for:", { userId, email });
     // ❗ Require at least one query
     if (!userId && !email) {
       return NextResponse.json(

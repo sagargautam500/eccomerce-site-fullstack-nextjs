@@ -21,6 +21,9 @@ import ProductCard from "@/components/products/ProductCard";
 import { getAllProducts, getFeaturedProducts } from "@/actions/api/productApi";
 import { getAllCategories } from "@/actions/api/categoryApi";
 
+// Force dynamic rendering to avoid database queries during build
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   // Fetch data
   const [allProductsData, featuredProducts, categories] = await Promise.all([
@@ -30,7 +33,6 @@ export default async function HomePage() {
   ]);
 
   const newArrivals = allProductsData.products.slice(0, 4);
- 
 
   return (
     <div className="min-h-screen mt-4 overflow-x-hidden">
@@ -387,7 +389,10 @@ export default async function HomePage() {
             <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
               Subscribe for deals, new arrivals, and insider tips
             </p>
-            <form  method="post" className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <form
+              method="post"
+              className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            >
               <input
                 type="email"
                 placeholder="Enter your email"
