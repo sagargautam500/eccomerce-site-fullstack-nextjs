@@ -1,6 +1,6 @@
 // src/actions/api/productApi.ts
 "use server";
-import axiosInstance from "@/lib/axios";
+import prisma from "@/lib/prisma";
 import { Product } from "@/types/product";
 
 // Get all products with filters
@@ -13,27 +13,70 @@ export async function getAllProducts(filters?: {
   page?: number;
   limit?: number;
   featured?: boolean;
-}): Promise<{ 
-  products: Product[]; 
+}): Promise<{
+  products: Product[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }> {
   try {
-    const queryParams = new URLSearchParams();
-    
-    if (filters?.search) queryParams.set("search", filters.search);
-    if (filters?.categoryId) queryParams.set("categoryId", filters.categoryId);
-    if (filters?.subCategoryId) queryParams.set("subCategoryId", filters.subCategoryId);
-    if (filters?.minPrice) queryParams.set("minPrice", filters.minPrice);
-    if (filters?.maxPrice) queryParams.set("maxPrice", filters.maxPrice);
-    if (filters?.featured) queryParams.set("featured", "true");
-    if (filters?.page) queryParams.set("page", filters.page.toString());
-    if (filters?.limit) queryParams.set("limit", filters.limit.toString());
-    
-    const res = await axiosInstance.get(`/api/products?${queryParams.toString()}`);
-    return res.data;
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 12;
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: any = {};
+
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: "insensitive" as const } },
+        {
+          description: {
+            contains: filters.search,
+            mode: "insensitive" as const,
+          },
+        },
+      ];
+    }
+
+    if (filters?.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+
+    if (filters?.subCategoryId) {
+      where.subCategoryId = filters.subCategoryId;
+    }
+
+    if (filters?.featured) {
+      where.isFeatured = true;
+    }
+
+    if (filters?.minPrice || filters?.maxPrice) {
+      where.price = {};
+      if (filters.minPrice) where.price.gte = parseInt(filters.minPrice);
+      if (filters.maxPrice) where.price.lte = parseInt(filters.maxPrice);
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      products: products as Product[],
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   } catch (error) {
     console.error("Failed to fetch products:", error);
     return {
@@ -47,10 +90,14 @@ export async function getAllProducts(filters?: {
 }
 
 // Get single product by ID
-export async function getProductById(productId: string): Promise<Product | null> {
+export async function getProductById(
+  productId: string
+): Promise<Product | null> {
   try {
-    const res = await axiosInstance.get<{ product: Product }>(`/api/products/${productId}`);
-    return res.data.product;
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+    return product as Product | null;
   } catch (error) {
     console.error("Failed to fetch product:", error);
     return null;
@@ -58,10 +105,15 @@ export async function getProductById(productId: string): Promise<Product | null>
 }
 
 // Get products by category
-export async function getProductsByCategory(categoryId: string): Promise<Product[]> {
+export async function getProductsByCategory(
+  categoryId: string
+): Promise<Product[]> {
   try {
-    const res = await axiosInstance.get<{ products: Product[] }>(`/api/products?categoryId=${categoryId}`);
-    return res.data.products;
+    const products = await prisma.product.findMany({
+      where: { categoryId },
+      orderBy: { createdAt: "desc" },
+    });
+    return products as Product[];
   } catch (error) {
     console.error("Failed to fetch products by category:", error);
     return [];
@@ -71,11 +123,12 @@ export async function getProductsByCategory(categoryId: string): Promise<Product
 // Get featured products
 export async function getFeaturedProducts(limit?: number): Promise<Product[]> {
   try {
-    const queryParams = new URLSearchParams({ featured: "true" });
-    if (limit) queryParams.set("limit", limit.toString());
-    
-    const res = await axiosInstance.get<{ products: Product[] }>(`/api/products?${queryParams.toString()}`);
-    return res.data.products;
+    const products = await prisma.product.findMany({
+      where: { isFeatured: true },
+      take: limit || 8,
+      orderBy: { createdAt: "desc" },
+    });
+    return products as Product[];
   } catch (error) {
     console.error("Failed to fetch featured products:", error);
     return [];
@@ -85,8 +138,16 @@ export async function getFeaturedProducts(limit?: number): Promise<Product[]> {
 // Search products
 export async function searchProducts(query: string): Promise<Product[]> {
   try {
-    const res = await axiosInstance.get<{ products: Product[] }>(`/api/products?search=${query}`);
-    return res.data.products;
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" as const } },
+          { description: { contains: query, mode: "insensitive" as const } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return products as Product[];
   } catch (error) {
     console.error("Failed to search products:", error);
     return [];
@@ -95,15 +156,20 @@ export async function searchProducts(query: string): Promise<Product[]> {
 
 // Get related products (by category, excluding current product)
 export async function getRelatedProducts(
-  productId: string, 
-  categoryId: string, 
+  productId: string,
+  categoryId: string,
   limit: number = 4
 ): Promise<Product[]> {
   try {
-    const res = await axiosInstance.get<{ products: Product[] }>(
-      `/api/products?categoryId=${categoryId}&exclude=${productId}&limit=${limit}`
-    );
-    return res.data.products;
+    const products = await prisma.product.findMany({
+      where: {
+        categoryId,
+        id: { not: productId },
+      },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+    return products as Product[];
   } catch (error) {
     console.error("Failed to fetch related products:", error);
     return [];

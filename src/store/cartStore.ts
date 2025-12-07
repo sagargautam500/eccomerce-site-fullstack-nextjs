@@ -25,7 +25,11 @@ interface CartStore {
   setIsLoggedIn: (value: boolean) => void;
   fetchCart: () => Promise<void>;
   addToCart: (data: AddToCartInput) => Promise<boolean>;
-  updateQuantity: (itemId: string, quantity: number, isGuest?: boolean) => Promise<void>;
+  updateQuantity: (
+    itemId: string,
+    quantity: number,
+    isGuest?: boolean
+  ) => Promise<void>;
   removeFromCart: (itemId: string, isGuest?: boolean) => Promise<void>;
   mergeGuestCart: () => Promise<void>;
   clearCart: () => void;
@@ -39,7 +43,8 @@ interface CartStore {
 }
 
 // Generate unique ID for guest cart
-const generateId = () => `guest_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+const generateId = () =>
+  `guest_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -56,7 +61,9 @@ export const useCartStore = create<CartStore>()(
       fetchCart: async () => {
         set({ loading: true });
         try {
-          const { data } = await axios.get<{ cart: CartItem[] }>("/api/cart/get");
+          const { data } = await axios.get<{ cart: CartItem[] }>(
+            "/api/cart/get"
+          );
           set({ cart: data.cart || [], isLoggedIn: true });
         } catch (error) {
           console.error("Fetch cart error:", error);
@@ -72,7 +79,10 @@ export const useCartStore = create<CartStore>()(
 
         try {
           // Try server first (will fail with 401 if not logged in)
-          const { data } = await axios.post<{ success: boolean; cart?: CartItem[] }>("/api/cart/add", {
+          const { data } = await axios.post<{
+            success: boolean;
+            cart?: CartItem[];
+          }>("/api/cart/add", {
             productId,
             quantity,
             size: size || undefined,
@@ -91,7 +101,7 @@ export const useCartStore = create<CartStore>()(
           // Not logged in - add to guest cart
           if (status === 401) {
             const guestCart = get().guestCart;
-            
+
             // Check if item already exists
             const existingIndex = guestCart.findIndex(
               (item) =>
@@ -180,8 +190,10 @@ export const useCartStore = create<CartStore>()(
         set({ cart: prevCart.filter((item) => item.id !== itemId) });
 
         try {
-          await axios.delete("/api/cart/delete", { 
-            data: { itemId } 
+          await axios.request({
+            method: "DELETE",
+            url: "/api/cart/delete",
+            data: { itemId },
           });
           toast.success("Removed");
         } catch (error) {
@@ -251,7 +263,8 @@ export const useCartStore = create<CartStore>()(
       getItemQuantity: (productId, size, color) => {
         const items = get().getAllCartItems();
         const item = items.find(
-          (i) => i.productId === productId && i.size === size && i.color === color
+          (i) =>
+            i.productId === productId && i.size === size && i.color === color
         );
         return item?.quantity || 0;
       },

@@ -12,6 +12,8 @@ export interface Cart {
   updatedAt: Date;
 }
 
+import { Category } from "./category";
+
 export interface CartProduct {
   id: string;
   name: string;
@@ -19,7 +21,7 @@ export interface CartProduct {
   originalPrice?: number;
   thumbnail: string;
   stock: number;
-  category: string; // ✅ Changed to string
+  category: string | Category; // ✅ Changed to string | Category
 }
 
 export interface CartItem {
@@ -30,7 +32,6 @@ export interface CartItem {
   color?: string;
   product: CartProduct;
 }
-
 
 // ✅ API Response Types
 export interface CartItemApiResponse {

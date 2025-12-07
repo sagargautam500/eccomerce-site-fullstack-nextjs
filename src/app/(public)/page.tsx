@@ -124,6 +124,7 @@ export default async function HomePage() {
                   <Image
                     src="/hero-image.jpg"
                     alt="Shopping Experience"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     fill
                     className="object-cover"
                     priority
@@ -255,6 +256,7 @@ export default async function HomePage() {
                       <Image
                         src={category.image}
                         alt={category.name}
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"
                       />

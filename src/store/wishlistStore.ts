@@ -3,10 +3,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 import { toast } from "sonner";
-import { WishlistItem, WishlistProduct } from "@/types/wishlist";
+import {
+  WishlistItem,
+  WishlistProduct,
+  AddWishlistResponse,
+  WishlistApiResponse,
+} from "@/types/wishlist";
 
 // Product info from API
-
 
 interface WishlistStore {
   // Server wishlist (logged in user)
@@ -35,7 +39,8 @@ interface WishlistStore {
 }
 
 // Generate unique ID for guest wishlist
-const generateId = () => `guest_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+const generateId = () =>
+  `guest_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
 export const useWishlistStore = create<WishlistStore>()(
   persist(
@@ -52,8 +57,14 @@ export const useWishlistStore = create<WishlistStore>()(
       fetchWishlist: async () => {
         set({ loading: true });
         try {
-          const { data } = await axios.get("/api/wishlist/get");
-          set({ wishlist: data.wishlist || [], isLoggedIn: true, loading: false });
+          const { data } = await axios.get<WishlistApiResponse>(
+            "/api/wishlist/get"
+          );
+          set({
+            wishlist: data.wishlist || [],
+            isLoggedIn: true,
+            loading: false,
+          });
         } catch (error) {
           console.error("Fetch wishlist error:", error);
           set({ isLoggedIn: false, loading: false });
@@ -66,7 +77,12 @@ export const useWishlistStore = create<WishlistStore>()(
 
         try {
           // Try server first (will fail with 401 if not logged in)
-          const { data } = await axios.post("/api/wishlist/add", { productId });
+          const { data } = await axios.post<AddWishlistResponse>(
+            "/api/wishlist/add",
+            {
+              productId,
+            }
+          );
 
           if (data.success) {
             await get().fetchWishlist();
@@ -83,7 +99,9 @@ export const useWishlistStore = create<WishlistStore>()(
             const guestWishlist = get().guestWishlist;
 
             // Check if already exists
-            const exists = guestWishlist.find((item) => item.productId === productId);
+            const exists = guestWishlist.find(
+              (item) => item.productId === productId
+            );
 
             if (exists) {
               toast.info("Already in wishlist");
@@ -115,7 +133,9 @@ export const useWishlistStore = create<WishlistStore>()(
         // Check if guest wishlist item
         if (isGuest || productId.startsWith("guest_")) {
           set({
-            guestWishlist: get().guestWishlist.filter((item) => item.productId !== productId),
+            guestWishlist: get().guestWishlist.filter(
+              (item) => item.productId !== productId
+            ),
           });
           toast.success("Removed from wishlist");
           return;
@@ -123,10 +143,16 @@ export const useWishlistStore = create<WishlistStore>()(
 
         // Server wishlist - optimistic update
         const prevWishlist = get().wishlist;
-        set({ wishlist: prevWishlist.filter((item) => item.productId !== productId) });
+        set({
+          wishlist: prevWishlist.filter((item) => item.productId !== productId),
+        });
 
         try {
-          const { data } = await axios.delete("/api/wishlist/delete", { data: { productId } });
+          const { data } = (await axios.request({
+            method: "DELETE",
+            url: "/api/wishlist/delete",
+            data: { productId },
+          })) as unknown as { data: AddWishlistResponse };
 
           if (data.success) {
             toast.success("Removed from wishlist");

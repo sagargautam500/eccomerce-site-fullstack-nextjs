@@ -1,13 +1,18 @@
 // src/action/api/categoryApi.ts
 "use server";
-import axiosInstance from "@/lib/axios";
+import prisma from "@/lib/prisma";
 import { Category, SubCategory } from "@/types/category";
 
 // Get all categories (optionally include subcategories)
 export async function getAllCategories(): Promise<Category[]> {
   try {
-    const res = await axiosInstance.get<{ categories: Category[] }>("/api/categories");
-    return res.data.categories;
+    const categories = await prisma.category.findMany({
+      include: {
+        subCategories: true,
+      },
+      orderBy: { name: "asc" },
+    });
+    return categories as Category[];
   } catch (error) {
     console.error("Failed to fetch categories:", error);
     return [];
@@ -15,10 +20,17 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 // Get single category by ID (optionally include subcategories)
-export async function getCategoryById(categoryId: string): Promise<Category | null> {
+export async function getCategoryById(
+  categoryId: string
+): Promise<Category | null> {
   try {
-    const res = await axiosInstance.get<{ category: Category }>(`/api/categories/${categoryId}`);
-    return res.data.category;
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+      include: {
+        subCategories: true,
+      },
+    });
+    return category as Category | null;
   } catch (error) {
     console.error("Failed to fetch category:", error);
     return null;
@@ -28,8 +40,10 @@ export async function getCategoryById(categoryId: string): Promise<Category | nu
 // Get all subcategories
 export async function getAllSubCategories(): Promise<SubCategory[]> {
   try {
-    const res = await axiosInstance.get<{ subCategories: SubCategory[] }>("/api/subcategories");
-    return res.data.subCategories;
+    const subCategories = await prisma.subCategory.findMany({
+      orderBy: { name: "asc" },
+    });
+    return subCategories as SubCategory[];
   } catch (error) {
     console.error("Failed to fetch subcategories:", error);
     return [];
@@ -37,10 +51,15 @@ export async function getAllSubCategories(): Promise<SubCategory[]> {
 }
 
 // Get subcategories by category ID
-export async function getSubCategoriesByCategory(categoryId: string): Promise<SubCategory[]> {
+export async function getSubCategoriesByCategory(
+  categoryId: string
+): Promise<SubCategory[]> {
   try {
-    const res = await axiosInstance.get<{ subCategories: SubCategory[] }>(`/api/subcategories?categoryId=${categoryId}`);
-    return res.data.subCategories;
+    const subCategories = await prisma.subCategory.findMany({
+      where: { categoryId },
+      orderBy: { name: "asc" },
+    });
+    return subCategories as SubCategory[];
   } catch (error) {
     console.error("Failed to fetch subcategories by category:", error);
     return [];
@@ -48,10 +67,14 @@ export async function getSubCategoriesByCategory(categoryId: string): Promise<Su
 }
 
 // Get single subcategory by ID
-export async function getSubCategoryById(subCategoryId: string): Promise<SubCategory | null> {
+export async function getSubCategoryById(
+  subCategoryId: string
+): Promise<SubCategory | null> {
   try {
-    const res = await axiosInstance.get<{ subCategory: SubCategory }>(`/api/subcategories/${subCategoryId}`);
-    return res.data.subCategory;
+    const subCategory = await prisma.subCategory.findUnique({
+      where: { id: subCategoryId },
+    });
+    return subCategory as SubCategory | null;
   } catch (error) {
     console.error("Failed to fetch subcategory:", error);
     return null;

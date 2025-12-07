@@ -66,7 +66,14 @@ export default function CartPage() {
     } else if (status === "unauthenticated") {
       setIsLoggedIn(false);
     }
-  }, [status, session, fetchCart, mergeGuestCart, guestCart.length, setIsLoggedIn]);
+  }, [
+    status,
+    session,
+    fetchCart,
+    mergeGuestCart,
+    guestCart.length,
+    setIsLoggedIn,
+  ]);
 
   // Loading
   if (!mounted || status === "loading") {
@@ -105,8 +112,12 @@ export default function CartPage() {
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-12 h-12 text-gray-300" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Cart is Empty</h1>
-          <p className="text-gray-500 mb-6">Start shopping to add items to your cart</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Your Cart is Empty
+          </h1>
+          <p className="text-gray-500 mb-6">
+            Start shopping to add items to your cart
+          </p>
           <Link
             href="/products"
             className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-pink-600 transition-all"
@@ -178,9 +189,17 @@ export default function CartPage() {
   };
 
   // Get image source
-  const getImageSrc = (thumbnail?: string) => {
+  const getImageSrc = (thumbnail: string) => {
     if (!thumbnail) return "/placeholder.png";
-    return thumbnail.startsWith("http") ? thumbnail : `/products/${thumbnail}`;
+
+    // External URL
+    if (thumbnail.startsWith("http")) return thumbnail;
+
+    // Full local path: /uploads/products/file.jpg
+    if (thumbnail.startsWith("/upload")) return thumbnail;
+
+    // Only filename: product-123.jpg
+    return `/products/${thumbnail}`;
   };
 
   return (
@@ -197,7 +216,9 @@ export default function CartPage() {
 
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Shopping Cart</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Shopping Cart
+              </h1>
               <p className="text-gray-500 text-sm mt-1">{itemsCount} items</p>
             </div>
 
@@ -205,7 +226,9 @@ export default function CartPage() {
             {isUserLoggedIn ? (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm">
                 <User className="w-4 h-4" />
-                <span className="font-medium">{session?.user?.name || "Logged In"}</span>
+                <span className="font-medium">
+                  {session?.user?.name || "Logged In"}
+                </span>
               </div>
             ) : (
               <Link
@@ -226,7 +249,9 @@ export default function CartPage() {
               <LogIn className="w-8 h-8 flex-shrink-0" />
               <div className="flex-1 text-center sm:text-left">
                 <h3 className="font-bold">Sign in for a better experience</h3>
-                <p className="text-sm text-white/90">Save your cart, track orders & checkout faster!</p>
+                <p className="text-sm text-white/90">
+                  Save your cart, track orders & checkout faster!
+                </p>
               </div>
               <Link
                 href="/auth/signin"
@@ -245,13 +270,20 @@ export default function CartPage() {
               const inWishlist = isInWishlist(item.productId);
 
               return (
-                <div key={item.id} className="bg-white rounded-xl shadow-sm p-4 flex gap-4">
+                <div
+                  key={item.id}
+                  className="bg-white rounded-xl shadow-sm p-4 flex gap-4"
+                >
                   {/* Image */}
-                  <Link href={`/products/${item.productId}`} className="flex-shrink-0">
+                  <Link
+                    href={`/products/${item.productId}`}
+                    className="flex-shrink-0"
+                  >
                     <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gray-100">
                       <Image
                         src={getImageSrc(item.product?.thumbnail)}
                         alt={item.product?.name || "Product"}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         fill
                         className="object-cover"
                       />
@@ -262,7 +294,11 @@ export default function CartPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-500 uppercase">{item.product?.category?.name}</p>
+                        <p className="text-xs text-gray-500 uppercase">
+                          {typeof item.product?.category === "string"
+                            ? item.product.category
+                            : item.product?.category?.name}
+                        </p>
                         <Link
                           href={`/products/${item.productId}`}
                           className="font-semibold text-gray-900 hover:text-orange-600 line-clamp-1 text-sm sm:text-base"
@@ -299,8 +335,12 @@ export default function CartPage() {
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                         <button
-                          disabled={item.quantity <= 1 || updatingId === item.id}
-                          onClick={() => handleUpdateQty(item.id, item.quantity - 1)}
+                          disabled={
+                            item.quantity <= 1 || updatingId === item.id
+                          }
+                          onClick={() =>
+                            handleUpdateQty(item.id, item.quantity - 1)
+                          }
                           className="p-1.5 hover:bg-gray-100 disabled:opacity-40"
                         >
                           <Minus className="w-4 h-4" />
@@ -309,8 +349,13 @@ export default function CartPage() {
                           {updatingId === item.id ? "..." : item.quantity}
                         </span>
                         <button
-                          disabled={item.quantity >= (item.product?.stock || 99) || updatingId === item.id}
-                          onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
+                          disabled={
+                            item.quantity >= (item.product?.stock || 99) ||
+                            updatingId === item.id
+                          }
+                          onClick={() =>
+                            handleUpdateQty(item.id, item.quantity + 1)
+                          }
                           className="p-1.5 hover:bg-gray-100 disabled:opacity-40"
                         >
                           <Plus className="w-4 h-4" />
@@ -318,7 +363,10 @@ export default function CartPage() {
                       </div>
 
                       <p className="font-bold text-gray-900">
-                        NPR {((item.product?.price || 0) * item.quantity).toLocaleString()}
+                        NPR{" "}
+                        {(
+                          (item.product?.price || 0) * item.quantity
+                        ).toLocaleString()}
                       </p>
                     </div>
 
@@ -337,15 +385,23 @@ export default function CartPage() {
                           </>
                         ) : (
                           <>
-                            <Heart className={`w-3.5 h-3.5 ${inWishlist ? "fill-red-500 text-red-500" : ""}`} />
-                            <span>{inWishlist ? "In Wishlist" : "Save for Later"}</span>
+                            <Heart
+                              className={`w-3.5 h-3.5 ${
+                                inWishlist ? "fill-red-500 text-red-500" : ""
+                              }`}
+                            />
+                            <span>
+                              {inWishlist ? "In Wishlist" : "Save for Later"}
+                            </span>
                           </>
                         )}
                       </button>
 
                       {/* Low stock warning */}
                       {item.product?.stock && item.product.stock <= 5 && (
-                        <p className="text-xs text-orange-600">Only {item.product.stock} left!</p>
+                        <p className="text-xs text-orange-600">
+                          Only {item.product.stock} left!
+                        </p>
                       )}
                     </div>
                   </div>
@@ -357,12 +413,16 @@ export default function CartPage() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-5 sticky top-24">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                Order Summary
+              </h2>
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">NPR {subtotal.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    NPR {subtotal.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
@@ -379,13 +439,19 @@ export default function CartPage() {
                 {subtotal > 0 && subtotal < 5000 && (
                   <div className="bg-orange-50 rounded-lg p-3">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-orange-700">Free shipping at NPR 5,000</span>
-                      <span className="text-orange-600">{Math.round((subtotal / 5000) * 100)}%</span>
+                      <span className="text-orange-700">
+                        Free shipping at NPR 5,000
+                      </span>
+                      <span className="text-orange-600">
+                        {Math.round((subtotal / 5000) * 100)}%
+                      </span>
                     </div>
                     <div className="h-1.5 bg-orange-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-orange-500 to-pink-500 rounded-full"
-                        style={{ width: `${Math.min((subtotal / 5000) * 100, 100)}%` }}
+                        style={{
+                          width: `${Math.min((subtotal / 5000) * 100, 100)}%`,
+                        }}
                       />
                     </div>
                     <p className="text-xs text-orange-600 mt-1">

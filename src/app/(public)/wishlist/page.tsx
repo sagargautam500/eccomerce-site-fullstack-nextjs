@@ -2,7 +2,6 @@
 // src/app/wishlist/page.tsx
 // ==============================================
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -53,7 +52,7 @@ const WishlistPage = () => {
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       setIsLoggedIn(true);
-     fetchWishlist().then(() => {
+      fetchWishlist().then(() => {
         // Merge guest wishlist after login
         if (guestWishlist.length > 0) {
           mergeGuestWishlist();
@@ -62,8 +61,14 @@ const WishlistPage = () => {
     } else if (status === "unauthenticated") {
       setIsLoggedIn(false);
     }
-  }, [status, session, fetchWishlist, mergeGuestWishlist, guestWishlist.length, setIsLoggedIn]);
-
+  }, [
+    status,
+    session,
+    fetchWishlist,
+    mergeGuestWishlist,
+    guestWishlist.length,
+    setIsLoggedIn,
+  ]);
 
   // Prevent hydration errors
   if (!mounted) {
@@ -190,8 +195,18 @@ const WishlistPage = () => {
     (item) => item.product.stock > 0
   ).length;
 
-  const getImageSrc = (img: string) =>
-    img?.startsWith("http") ? img : `/products/${img}`;
+  const getImageSrc = (thumbnail: string) => {
+    if (!thumbnail) return "/placeholder.png";
+
+    // External URL
+    if (thumbnail.startsWith("http")) return thumbnail;
+
+    // Full local path: /uploads/products/file.jpg
+    if (thumbnail.startsWith("/upload")) return thumbnail;
+
+    // Only filename: product-123.jpg
+    return `/products/${thumbnail}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 mt-15 py-8">
@@ -203,8 +218,8 @@ const WishlistPage = () => {
             My Wishlist
           </h1>
           <p className="text-gray-600 mt-2">
-            {getWishlistCount()}{" "}
-            {getWishlistCount() === 1 ? "item" : "items"} in your wishlist
+            {getWishlistCount()} {getWishlistCount() === 1 ? "item" : "items"}{" "}
+            in your wishlist
             {totalSavings > 0 && (
               <span className="ml-2 text-green-600 font-semibold">
                 • Potential savings: NPR {totalSavings.toLocaleString()}
@@ -267,6 +282,7 @@ const WishlistPage = () => {
                             <Image
                               src={getImageSrc(item.product.thumbnail)}
                               alt={item.product.name}
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                               fill
                               className="object-cover hover:scale-105 transition-transform"
                             />
@@ -284,7 +300,9 @@ const WishlistPage = () => {
                                 {item.product.name}
                               </Link>
                               <p className="text-sm text-gray-500 mt-1">
-                                {item.product.category.name}
+                                {typeof item.product.category === "string"
+                                  ? item.product.category
+                                  : item.product.category.name}
                               </p>
                             </div>
                           </div>
@@ -295,7 +313,8 @@ const WishlistPage = () => {
                               NPR {item.product.price.toLocaleString()}
                             </span>
                             {item.product.originalPrice &&
-                              item.product.originalPrice > item.product.price && (
+                              item.product.originalPrice >
+                                item.product.price && (
                                 <>
                                   <span className="text-lg text-gray-500 line-through">
                                     NPR{" "}

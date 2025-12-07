@@ -19,9 +19,8 @@ export async function getContactMessages({
   page?: number;
   limit?: number;
   search?: string;
-}) 
-{
-      if (!(await isAdmin())) {
+}) {
+  if (!(await isAdmin())) {
     throw new Error("Unauthorized");
   }
 
@@ -31,9 +30,9 @@ export async function getContactMessages({
   const where = search
     ? {
         OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { email: { contains: search, mode: "insensitive" } },
-          { subject: { contains: search, mode: "insensitive" } },
+          { name: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
+          { subject: { contains: search, mode: "insensitive" as const } },
         ],
       }
     : {};
@@ -51,7 +50,10 @@ export async function getContactMessages({
   const totalPages = Math.ceil(total / take);
 
   return {
-    contacts,
+    contacts: contacts.map((contact) => ({
+      ...contact,
+      createdAt: contact.createdAt.toISOString(),
+    })),
     pagination: {
       currentPage: page,
       totalPages,
@@ -64,7 +66,7 @@ export async function getContactMessages({
 
 // Optional: Delete a contact
 export async function deleteContactMessage(id: string) {
-      if (!(await isAdmin())) {
+  if (!(await isAdmin())) {
     throw new Error("Unauthorized");
   }
 

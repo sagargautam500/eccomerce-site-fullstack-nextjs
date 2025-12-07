@@ -8,6 +8,8 @@ export interface Wishlist {
   updatedAt: Date;
 }
 
+import { Category } from "./category";
+
 export interface WishlistProduct {
   id: string;
   name: string;
@@ -15,7 +17,7 @@ export interface WishlistProduct {
   originalPrice?: number;
   thumbnail: string;
   stock: number;
-  category: string;
+  category: string | Category;
 }
 
 export interface WishlistItem {

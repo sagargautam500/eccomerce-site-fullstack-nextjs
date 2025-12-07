@@ -111,13 +111,21 @@ export default function CheckoutPage() {
     name: session.user.name || "",
   };
   // Get image source
-  const getImageSrc = (thumbnail?: string) => {
-    if (!thumbnail) return "/placeholder.png";
-    return thumbnail.startsWith("http") ? thumbnail : `/products/${thumbnail}`;
-  };
+const getImageSrc = (thumbnail: string) => {
+  if (!thumbnail) return "/placeholder.png";
+
+  // External URL
+  if (thumbnail.startsWith("http")) return thumbnail;
+
+  // Full local path: /uploads/products/file.jpg
+  if (thumbnail.startsWith("/upload")) return thumbnail;
+
+  // Only filename: product-123.jpg
+  return `/products/${thumbnail}`;
+};
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4">
+    <div className="min-h-screen mt-4 bg-gray-50 py-6 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -168,6 +176,7 @@ export default function CheckoutPage() {
                       <Image
                         src={getImageSrc(item.product?.thumbnail)}
                         alt={item.product?.name || "Product"}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         fill
                         className="object-cover"
                       />

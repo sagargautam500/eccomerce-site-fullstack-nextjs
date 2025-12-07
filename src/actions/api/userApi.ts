@@ -11,6 +11,9 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       where: { email },
       include: {
         orders: {
+          include: {
+            items: true,
+          },
           orderBy: { createdAt: "desc" },
           take: 5, // Get last 5 orders
         },
@@ -33,10 +36,70 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       id: user.id,
       name: user.name || undefined,
       email: user.email,
-      role: user.role as 'admin' | 'user',
-      orders: user.orders || [],
-      wishlist: user.wishlist || [],
-      cartItems: user.cartItems || [],
+      role: user.role as "admin" | "user",
+      orders: user.orders.map((order) => ({
+        id: order.id,
+        userId: order.userId || undefined,
+        email: order.email,
+        amount: order.amount,
+        currency: order.currency,
+        status: order.status,
+        paymentMethod: order.paymentMethod || undefined,
+        stripeCheckoutSession: order.stripeCheckoutSession || undefined,
+        stripePaymentIntentId: order.stripePaymentIntentId || undefined,
+        esewaRefId: order.esewaRefId || undefined,
+        khaltiToken: order.khaltiToken || undefined,
+        items: order.items.map((item) => ({
+          id: item.id,
+          orderId: item.orderId,
+          productId: item.productId,
+          name: item.name,
+          description: "", // Not stored in OrderItem schema
+          price: item.price,
+          originalPrice: undefined,
+          brand: undefined,
+          category: "", // Not stored in OrderItem schema
+          subCategory: undefined,
+          thumbnail: item.thumbnail,
+          images: [],
+          size: item.size || undefined,
+          color: item.color || undefined,
+          quantity: item.quantity,
+          stockAtOrder: undefined,
+          rating: undefined,
+          totalReviews: undefined,
+          isFeatured: false,
+        })),
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      })),
+      wishlist: user.wishlist.map((w) => ({
+        id: w.id,
+        userId: w.userId,
+        productId: w.productId,
+        product: w.product,
+        createdAt: w.createdAt,
+        updatedAt: new Date(), // Wishlist doesn't have updatedAt in schema
+      })),
+      cartItems: user.cartItems.map((c) => ({
+        id: c.id,
+        userId: c.userId,
+        productId: c.productId,
+        product: {
+          id: c.product.id,
+          name: c.product.name,
+          price: c.product.price,
+          originalPrice: c.product.originalPrice || undefined,
+          thumbnail: c.product.thumbnail,
+          stock: c.product.stock,
+          category: c.product.categoryId || "", // Use categoryId as string
+        },
+        quantity: c.quantity,
+        size: c.size || undefined,
+        color: c.color || undefined,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      })),
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -67,7 +130,7 @@ export async function getUserProfile(email: string): Promise<User | null> {
       id: user.id,
       name: user.name || undefined,
       email: user.email,
-      role: user.role as 'admin' | 'user',
+      role: user.role as "admin" | "user",
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -97,7 +160,7 @@ export async function updateUserProfile(
         id: user.id,
         name: user.name || undefined,
         email: user.email,
-        role: user.role as 'admin' | 'user',
+        role: user.role as "admin" | "user",
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -126,7 +189,10 @@ export async function getUserStats(email: string) {
     if (!user) return null;
 
     const totalOrders = user.orders.length;
-    const totalSpent = user.orders.reduce((sum, order) => sum + order.total, 0);
+    const totalSpent = user.orders.reduce(
+      (sum, order) => sum + order.amount,
+      0
+    );
     const wishlistCount = user.wishlist.length;
     const cartItemsCount = user.cartItems.length;
 
