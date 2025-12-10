@@ -168,10 +168,14 @@ export default function SubCategoriesPage() {
     }
     try {
       setSubmitting(true);
-      await updateSubCategory(id, {
+       const res = await updateSubCategory(id, {
         name: editSubCategory.name.trim(),
         categoryId: editSubCategory.categoryId,
       });
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
       toast.success("Subcategory updated successfully");
       setEditingSubCategory(null);
       setEditSubCategory({ name: "", categoryId: "" });

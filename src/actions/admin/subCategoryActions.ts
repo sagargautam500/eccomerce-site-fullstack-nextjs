@@ -184,7 +184,7 @@ export async function updateSubCategory(
     });
 
     if (existing) {
-      throw new Error("Subcategory with this name already exists");
+      return { success: false, message: "Subcategory already exists" };
     }
 
     // Verify category exists
@@ -193,7 +193,7 @@ export async function updateSubCategory(
     });
 
     if (!category) {
-      throw new Error("Category not found");
+      return { success: false, message: "Category not found" };
     }
 
     const subcategory = await prisma.subCategory.update({

@@ -86,7 +86,7 @@ export async function createCategory(data: { name: string; image?: string }) {
     });
 
     if (existing) {
-      throw new Error("Category with this name already exists");
+      return { success: false, message: "Category with this name already exists" };
     }
 
     const category = await prisma.category.create({
@@ -123,7 +123,7 @@ export async function updateCategory(id: string, data: { name: string; image?: s
     });
 
     if (existing) {
-      throw new Error("Category with this name already exists");
+      return { success: false, message: "Category with this name already exists" };
     }
 
     // Get old category data to check for image changes

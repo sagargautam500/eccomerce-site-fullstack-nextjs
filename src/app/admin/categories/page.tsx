@@ -97,10 +97,14 @@ export default function CategoriesPage() {
     }
     try {
       setSubmitting(true);
-      await createCategory({
+      const res = await createCategory({
         name: newCategory.name.trim(),
         image: newCategory.image.trim() || undefined,
       });
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
       toast.success("Category added successfully");
       setShowAddModal(false);
       setNewCategory({ name: "", image: "" });
@@ -120,10 +124,14 @@ export default function CategoriesPage() {
     }
     try {
       setSubmitting(true);
-      await updateCategory(editingCategory.id, {
+      const res = await updateCategory(editingCategory.id, {
         name: editCategory.name.trim(),
         image: editCategory.image.trim() || undefined,
       });
+      if (!res.success) {
+        toast.error(res.message);
+        return;
+      }
       toast.success("Category updated successfully");
       setShowEditModal(false);
       setEditingCategory(null);
