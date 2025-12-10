@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////////////////////////////////////////
+// USER MODEL
+//////////////////////////////////////////////////////////
+
+model User {
+  id            String     @id @default(uuid())
+  name          String?
+  email         String     @unique
+  password      String?
+  role          String     @default("user")
+
+  resetToken    String?
+  resetExpires  DateTime?
+
+  orders        Order[]
+  wishlist      Wishlist[]
+  cartItems     CartItem[]
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+//////////////////////////////////////////////////////////
+// CATEGORY MODELS
+//////////////////////////////////////////////////////////
+
+model Category {
+  id            String         @id @default(uuid())
+  name          String
+  slug          String         @unique
+  image         String?
+  subCategories SubCategory[]
+  products      Product[]
+
+  createdAt     DateTime       @default(now())
+}
+
+model SubCategory {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+
+  // Relation with Category
+  categoryId  String    @map("categoryid")
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  products    Product[]
+
+  createdAt   DateTime  @default(now())
+
+  @@index([categoryId])
+}
+
+//////////////////////////////////////////////////////////
+// PRODUCT MODEL
+//////////////////////////////////////////////////////////
+
+model Product {
+  id             String        @id @default(uuid())
+  name           String
+  description    String
+  price          Int
+  originalPrice  Int?
+
+  brand          String?
+
+  // Category relation
+  categoryId     String?       @map("categoryid")
+  category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // Subcategory relation
+  subCategoryId  String?       @map("subcategoryid")
+  subCategory    SubCategory?  @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
+
+  isFeatured     Boolean       @default(false)
+  images         String[]
+  thumbnail      String
+
+  sizes          String[]
+  colors         String[]
+
+  stock          Int
+
+  rating         Float?
+  totalReviews   Int?
+
+  wishlist       Wishlist[]
+  cartItems      CartItem[]
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([categoryId])
+  @@index([subCategoryId])
+  @@index([createdAt])
+}
+
+//////////////////////////////////////////////////////////
+// WISHLIST
+//////////////////////////////////////////////////////////
+
+model Wishlist {
+  id         String     @id @default(uuid())
+
+  userId     String     @map("userid")
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId  String     @map("productid")
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime   @default(now())
+
+  @@unique([userId, productId])
+}
+
+//////////////////////////////////////////////////////////
+// CART ITEMS
+//////////////////////////////////////////////////////////
+
+model CartItem {
+  id         String     @id @default(uuid())
+
+  userId     String     @map("userid")
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId  String     @map("productid")
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quantity   Int        @default(1)
+  size       String?
+  color      String?
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@unique([userId, productId, size, color])
+}
+
+//////////////////////////////////////////////////////////
+// ORDER + ORDER ITEMS
+//////////////////////////////////////////////////////////
+
+model Order {
+  id                    String       @id @default(uuid())
+
+  userId                String?      @map("userid")
+  user                  User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  email                 String
+  amount                Int
+  currency              String       @default("npr")
+  status                String       @default("pending")
+  paymentMethod         String?      @default("card")
+
+  stripeCheckoutSession String?      @unique
+  stripePaymentIntentId String?      @unique
+  esewaRefId            String?      @unique
+  khaltiToken           String?      @unique
+
+  items                 OrderItem[]
+
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([paymentMethod])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String    @id @default(uuid())
+
+  orderId     String    @map("orderid")
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId   String    @map("productid")
+
+  name        String
+  price       Int
+  thumbnail   String
+  size        String?
+  color       String?
+  quantity    Int
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+//////////////////////////////////////////////////////////
+// CONTACT
+//////////////////////////////////////////////////////////
+model Contact {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
+

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import bcrypt from "bcrypt";
 import prisma  from "@/lib/prisma";
 import { signupSchema } from "@/lib/zod";
-
-
 
 
 export async function POST(req: Request) {

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "6.19",
     "@prisma/extension-accelerate": "^2.0.2",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
@@ -34,13 +34,13 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
-    "@types/node": "^20",
+    "@types/node": "^20.19.26",
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.0.7",
-    "prisma": "^6.19.0",
+    "prisma": "6.19",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"
