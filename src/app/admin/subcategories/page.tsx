@@ -121,31 +121,41 @@ export default function SubCategoriesPage() {
     }
   };
 
-  const handleAddSubCategory = async () => {
-    if (!newSubCategory.name.trim()) {
-      toast.error("Subcategory name is required");
+ const handleAddSubCategory = async () => {
+  if (!newSubCategory.name.trim()) {
+    toast.error("Subcategory name is required");
+    return;
+  }
+
+  if (!newSubCategory.categoryId) {
+    toast.error("Please select a category");
+    return;
+  }
+
+  try {
+    setSubmitting(true);
+
+    const res = await createSubCategory({
+      name: newSubCategory.name.trim(),
+      categoryId: newSubCategory.categoryId,
+    });
+
+    if (!res.success) {
+      toast.error(res.message);
       return;
     }
-    if (!newSubCategory.categoryId) {
-      toast.error("Please select a category");
-      return;
-    }
-    try {
-      setSubmitting(true);
-      await createSubCategory({
-        name: newSubCategory.name.trim(),
-        categoryId: newSubCategory.categoryId,
-      });
-      toast.success("Subcategory added successfully");
-      setShowAddModal(false);
-      setNewSubCategory({ name: "", categoryId: "" });
-      fetchSubCategories();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add subcategory");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+
+    toast.success("Subcategory added successfully");
+    setShowAddModal(false);
+    setNewSubCategory({ name: "", categoryId: "" });
+    fetchSubCategories();
+  } catch (error) {
+    toast.error("Something went wrong");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const handleUpdateSubCategory = async (id: string) => {
     if (!editSubCategory.name.trim()) {

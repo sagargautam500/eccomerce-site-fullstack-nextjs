@@ -116,28 +116,28 @@ export async function createSubCategory(data: {
   categoryId: string;
 }) {
   if (!(await isAdmin())) {
-    throw new Error("Unauthorized");
+    return { success: false, message: "Unauthorized" };
   }
 
   try {
     const slug = data.name.toLowerCase().replace(/\s+/g, "-");
 
-    // Check if subcategory with same slug exists
+    // Check if subcategory exists
     const existing = await prisma.subCategory.findUnique({
       where: { slug },
     });
 
     if (existing) {
-      throw new Error("Subcategory with this name already exists");
+      return { success: false, message: "Subcategory already exists" };
     }
 
-    // Verify category exists
+    // Check category exists
     const category = await prisma.category.findUnique({
       where: { id: data.categoryId },
     });
 
     if (!category) {
-      throw new Error("Category not found");
+      return { success: false, message: "Category not found" };
     }
 
     const subcategory = await prisma.subCategory.create({
@@ -150,12 +150,18 @@ export async function createSubCategory(data: {
 
     revalidatePath("/admin/subcategories");
     revalidatePath("/admin/categories");
+
     return { success: true, subcategory };
   } catch (error: any) {
     console.error("Failed to create subcategory:", error);
-    throw new Error(error.message || "Failed to create subcategory");
+
+    return {
+      success: false,
+      message: "Internal server error",
+    };
   }
 }
+
 
 // UPDATE SUBCATEGORY
 export async function updateSubCategory(
