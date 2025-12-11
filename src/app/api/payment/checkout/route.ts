@@ -21,13 +21,14 @@ const checkoutSchema = z.object({
       })
     )
     .min(1),
-
   user: z.object({
     id: z.string().min(1),
     email: z.string().email(),
   }),
-
   paymentMethod: z.enum(["card", "esewa", "khalti"]).optional().default("card"),
+  // Optional unique identifiers for eSewa/Khalti
+  esewaRefId: z.string().optional(),
+  khaltiToken: z.string().optional(),
 });
 
 // =====================================
@@ -45,16 +46,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const { items, user, paymentMethod } = validation.data;
-    
+    const { items, user, paymentMethod, esewaRefId, khaltiToken } = validation.data;
+
     // =========================
     // ✅ Calculate Total Amount
-    // ==========================
-    const amount = items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
+    // =========================
+    const amount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     if (amount < 1) {
       return NextResponse.json(
         { error: "Order amount must be at least 1 NPR" },
@@ -62,75 +59,64 @@ export async function POST(req: Request) {
       );
     }
 
-    // ================================
-    // ✅ Step 1 — Create Order
-    // ================================
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        email: user.email,
-        amount,
-        currency: "npr",
-        status: "pending",
-        paymentMethod,
-      },
-    });
-
-    // ================================
-    // ✅ Step 2 — Create Order Items snapshot of product
-    // ================================
-    await prisma.orderItem.createMany({
-      data: items.map((item) => ({
-        orderId: order.id,
-
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        thumbnail: item.thumbnail,
-        size: item.size ?? null,
-        color: item.color ?? null,
-        quantity: item.quantity,
-      })),
-    });
-
-    // ================================
-    // 📌 PAYMENT METHOD HANDLING
-    // ================================
-
-    // -------------------------------
-    // 💳 CARD PAYMENT — STRIPE
-    // -------------------------------
+    // =========================
+    // ✅ Handle Card Payment (Stripe)
+    // =========================
     if (paymentMethod === "card") {
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",
-
         line_items: items.map((item) => ({
           price_data: {
             currency: "npr",
-            product_data: {
-              name: item.name,
-            },
+            product_data: { name: item.name },
             unit_amount: Math.round(item.price * 100),
           },
           quantity: item.quantity,
         })),
-
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/stripe/cancel?orderId=${order.id}`,
-
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/stripe/cancel`,
         customer_email: user.email,
-
-        metadata: {
-          orderId: order.id,
-          userId: user.id,
-        },
+        metadata: { userId: user.id },
       });
 
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { stripeCheckoutSession: session.id },
+      // Check if order already exists
+      let order = await prisma.order.findUnique({
+        where: { stripeCheckoutSession: session.id },
       });
+
+      if (!order) {
+        // Create order + items atomically
+        order = await prisma.$transaction(async (tx) => {
+          const newOrder = await tx.order.create({
+            data: {
+              userId: user.id,
+              email: user.email,
+              amount,
+              currency: "npr",
+              status: "pending",
+              paymentMethod: "card",
+              stripeCheckoutSession: session.id,
+              stripePaymentIntentId: session.payment_intent as string | null,
+            },
+          });
+
+          await tx.orderItem.createMany({
+            data: items.map((item) => ({
+              orderId: newOrder.id,
+              productId: item.productId,
+              name: item.name,
+              price: item.price,
+              thumbnail: item.thumbnail,
+              size: item.size ?? null,
+              color: item.color ?? null,
+              quantity: item.quantity,
+            })),
+          });
+
+          return newOrder;
+        });
+      }
 
       return NextResponse.json({
         url: session.url,
@@ -139,28 +125,58 @@ export async function POST(req: Request) {
       });
     }
 
-    // -------------------------------
-    // 🟦 ESEWA & KHALTI PAYMENT
-    // -------------------------------
+    // =========================
+    // 🟦 eSewa & Khalti Payments
+    // =========================
     if (paymentMethod === "esewa" || paymentMethod === "khalti") {
-      const paymentUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/${paymentMethod}?orderId=${order.id}`;
+      // Check for existing order (prevent duplicates)
+      let order;
+      if (paymentMethod === "esewa" && esewaRefId) {
+        order = await prisma.order.findUnique({ where: { esewaRefId } });
+      }
+      if (paymentMethod === "khalti" && khaltiToken) {
+        order = await prisma.order.findUnique({ where: { khaltiToken } });
+      }
 
-      return NextResponse.json({
-        url: paymentUrl,
-        orderId: order.id,
-        paymentMethod,
-      });
+      if (!order) {
+        order = await prisma.$transaction(async (tx) => {
+          const newOrder = await tx.order.create({
+            data: {
+              userId: user.id,
+              email: user.email,
+              amount,
+              currency: "npr",
+              status: "pending",
+              paymentMethod,
+              esewaRefId: paymentMethod === "esewa" ? esewaRefId : null,
+              khaltiToken: paymentMethod === "khalti" ? khaltiToken : null,
+            },
+          });
+
+          await tx.orderItem.createMany({
+            data: items.map((item) => ({
+              orderId: newOrder.id,
+              productId: item.productId,
+              name: item.name,
+              price: item.price,
+              thumbnail: item.thumbnail,
+              size: item.size ?? null,
+              color: item.color ?? null,
+              quantity: item.quantity,
+            })),
+          });
+
+          return newOrder;
+        });
+      }
+
+      const paymentUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/${paymentMethod}?orderId=${order.id}`;
+      return NextResponse.json({ url: paymentUrl, orderId: order.id, paymentMethod });
     }
 
-    return NextResponse.json(
-      { error: "Invalid payment method" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
   } catch (error) {
     console.error("Checkout Error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
