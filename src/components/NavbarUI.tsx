@@ -144,9 +144,10 @@ const wishlistCount = useWishlistStore((state) => state.getWishlistCount());
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 sm:space-x-3 py-4 group flex-shrink-0">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-pink-400 rounded-xl blur-sm group-hover:blur-md transition-all"></div>
-              <div className="relative bg-gradient-to-r from-orange-500 to-pink-500 p-2 sm:p-2.5 rounded-xl shadow-md group-hover:shadow-lg transition-all">
-                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              {/* <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-pink-400 rounded-xl blur-sm group-hover:blur-md transition-all"></div> */}
+              <div className="relative rounded-xl shadow-md group-hover:shadow-lg transition-all">
+                <img src="/logo.png" alt="Logo" className="w-6 h-6 sm:w-10 sm:h-10" />
+
               </div>
             </div>
             <div>
