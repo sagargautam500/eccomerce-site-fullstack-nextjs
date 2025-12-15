@@ -90,24 +90,58 @@ DATABASE_URL="postgresql://user:password@localhost:5432/ecommerce"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_SECRET="your-nextauth-secret"
 
 # Google OAuth
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
+# SMTP
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-email-password"
+CONTACT_EMAIL="your-contact-email"
+
 # Stripe
-STRIPE_PUBLIC_KEY="pk_test_..."
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+STRIPE_SECRET_KEY="your_stripe_secret_key"
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="your_stripe_publishable_key"
+STRIPE_WEBHOOK_SECRET="your_stripe_webhook_secret"
+
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 
 # eSewa
-ESEWA_MERCHANT_ID="your-esewa-merchant-id"
-ESEWA_SECRET_KEY="your-esewa-secret"
+NEXT_PUBLIC_ESEWA_URL="your_esewa_url"
+ESEWA_VERIFY_URL="your_esewa_verify_url"
+ESEWA_MERCHANT_CODE="your_esewa_merchant_code"
+ESEWA_SECRET_KEY="your_esewa_secret_key"
 
 # Khalti
-KHALTI_PUBLIC_KEY="your-khalti-public-key"
-KHALTI_SECRET_KEY="your-khalti-secret-key"
+NEXT_PUBLIC_KHALTI_PUBLIC_KEY="your_khalti_public_key"
+KHALTI_SECRET_KEY="your_khalti_secret_key"
+KHALTI_VERIFY_URL="your_khalti_verify_url"
+
+# =========================
+# eSewa Test
+NEXT_PUBLIC_ESEWA_URL_TEST="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
+ESEWA_VERIFY_URL_TEST="https://rc-epay.esewa.com.np/api/epay/transaction/status"
+
+# eSewa Prod
+NEXT_PUBLIC_ESEWA_URL_PROD="https://esewa.com.np/epay/main"
+ESEWA_VERIFY_URL_PROD="https://esewa.com.np/epay/transrec"
+
+# =========================
+# Khalti TEST (Sandbox)
+NEXT_PUBLIC_KHALTI_PUBLIC_KEY_TEST="your_khalti_test_public_key"
+KHALTI_SECRET_KEY_TEST="your_khalti_test_secret_key"
+KHALTI_VERIFY_URL_TEST="https://dev.khalti.com/api/v2/payment/verify/"
+
+# Khalti PRODUCTION
+NEXT_PUBLIC_KHALTI_PUBLIC_KEY_PROD="your_khalti_live_public_key"
+KHALTI_SECRET_KEY_PROD="your_khalti_live_secret_key"
+KHALTI_VERIFY_URL_PROD="https://khalti.com/api/v2/payment/verify/"
+# =========================
+
 ```
 
 4. **Setup Database**
