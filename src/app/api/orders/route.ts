@@ -28,6 +28,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       include: {
         items: true, // fetch order items
+        shippingAddress: true,
       },
     });
 

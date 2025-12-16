@@ -3,7 +3,6 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { Order } from "@/types/order";
 import { auth } from "@/auth";
 
 export interface OrderFilters {

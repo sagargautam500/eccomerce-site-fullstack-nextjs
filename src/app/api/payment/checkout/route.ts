@@ -29,6 +29,15 @@ const checkoutSchema = z.object({
   // Optional unique identifiers for eSewa/Khalti
   esewaRefId: z.string().optional(),
   khaltiToken: z.string().optional(),
+  shippingAddress: z.object({
+    fullName: z.string().min(1),
+    phone: z.string().min(1),
+    addressLine: z.string().min(1),
+    city: z.string().min(1),
+    state: z.string().min(1),
+    zipCode: z.string().optional(),
+    country: z.string().min(1),
+  }),
 });
 
 // =====================================
@@ -46,12 +55,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const { items, user, paymentMethod, esewaRefId, khaltiToken } = validation.data;
+    const {
+      items,
+      user,
+      paymentMethod,
+      esewaRefId,
+      khaltiToken,
+      shippingAddress,
+    } = validation.data;
 
     // =========================
     // ✅ Calculate Total Amount
     // =========================
-    const amount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const amount = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
     if (amount < 1) {
       return NextResponse.json(
         { error: "Order amount must be at least 1 NPR" },
@@ -88,6 +107,19 @@ export async function POST(req: Request) {
       if (!order) {
         // Create order + items atomically
         order = await prisma.$transaction(async (tx) => {
+          // 1. Create Order Address Snapshot
+          const orderAddress = await tx.orderAddress.create({
+            data: {
+              fullName: shippingAddress.fullName,
+              phone: shippingAddress.phone,
+              addressLine: shippingAddress.addressLine,
+              city: shippingAddress.city,
+              state: shippingAddress.state,
+              zipCode: shippingAddress.zipCode || "",
+              country: shippingAddress.country,
+            },
+          });
+
           const newOrder = await tx.order.create({
             data: {
               userId: user.id,
@@ -98,6 +130,7 @@ export async function POST(req: Request) {
               paymentMethod: "card",
               stripeCheckoutSession: session.id,
               stripePaymentIntentId: session.payment_intent as string | null,
+              shippingAddressId: orderAddress.id,
             },
           });
 
@@ -140,6 +173,19 @@ export async function POST(req: Request) {
 
       if (!order) {
         order = await prisma.$transaction(async (tx) => {
+          // 1. Create Order Address Snapshot
+          const orderAddress = await tx.orderAddress.create({
+            data: {
+              fullName: shippingAddress.fullName,
+              phone: shippingAddress.phone,
+              addressLine: shippingAddress.addressLine,
+              city: shippingAddress.city,
+              state: shippingAddress.state,
+              zipCode: shippingAddress.zipCode || "",
+              country: shippingAddress.country,
+            },
+          });
+
           const newOrder = await tx.order.create({
             data: {
               userId: user.id,
@@ -150,6 +196,7 @@ export async function POST(req: Request) {
               paymentMethod,
               esewaRefId: paymentMethod === "esewa" ? esewaRefId : null,
               khaltiToken: paymentMethod === "khalti" ? khaltiToken : null,
+              shippingAddressId: orderAddress.id,
             },
           });
 
@@ -171,12 +218,22 @@ export async function POST(req: Request) {
       }
 
       const paymentUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/${paymentMethod}?orderId=${order.id}`;
-      return NextResponse.json({ url: paymentUrl, orderId: order.id, paymentMethod });
+      return NextResponse.json({
+        url: paymentUrl,
+        orderId: order.id,
+        paymentMethod,
+      });
     }
 
-    return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid payment method" },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Checkout Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

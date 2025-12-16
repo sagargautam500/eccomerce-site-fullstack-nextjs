@@ -7,12 +7,10 @@ import { CheckoutItem } from "@/types/checkoutItem";
 import { User } from "@/types/user";
 import { createCheckoutSession } from "@/actions/api/paymentApi";
 
-
-
-
 interface Props {
   items: CheckoutItem[];
   user: User;
+  shippingAddress: any;
 }
 
 type PaymentMethod = "card" | "esewa" | "khalti";
@@ -38,7 +36,11 @@ const paymentMethods = [
   },
 ];
 
-export default function PaymentMethodSelector({ items, user }: Props) {
+export default function PaymentMethodSelector({
+  items,
+  user,
+  shippingAddress,
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<PaymentMethod>("card");
@@ -47,8 +49,20 @@ export default function PaymentMethodSelector({ items, user }: Props) {
     setLoading(true);
     setError(null);
 
+    // Validate shipping address before checkout
+    if (!shippingAddress) {
+      setError("Please select a shipping address");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const data = await createCheckoutSession(items, user, selected);
+      const data = await createCheckoutSession(
+        items,
+        user,
+        selected,
+        shippingAddress
+      );
 
       if (data.url) {
         window.location.href = data.url;
@@ -63,23 +77,24 @@ export default function PaymentMethodSelector({ items, user }: Props) {
   };
 
   const getColorClasses = (color: string, isSelected: boolean) => {
-    const colors: Record<string, { bg: string; border: string; text: string }> = {
-      orange: {
-        bg: isSelected ? "bg-orange-100" : "bg-orange-50",
-        border: isSelected ? "border-orange-500" : "border-orange-200",
-        text: "text-orange-600",
-      },
-      green: {
-        bg: isSelected ? "bg-green-100" : "bg-green-50",
-        border: isSelected ? "border-green-500" : "border-green-200",
-        text: "text-green-600",
-      },
-      purple: {
-        bg: isSelected ? "bg-purple-100" : "bg-purple-50",
-        border: isSelected ? "border-purple-500" : "border-purple-200",
-        text: "text-purple-600",
-      },
-    };
+    const colors: Record<string, { bg: string; border: string; text: string }> =
+      {
+        orange: {
+          bg: isSelected ? "bg-orange-100" : "bg-orange-50",
+          border: isSelected ? "border-orange-500" : "border-orange-200",
+          text: "text-orange-600",
+        },
+        green: {
+          bg: isSelected ? "bg-green-100" : "bg-green-50",
+          border: isSelected ? "border-green-500" : "border-green-200",
+          text: "text-green-600",
+        },
+        purple: {
+          bg: isSelected ? "bg-purple-100" : "bg-purple-50",
+          border: isSelected ? "border-purple-500" : "border-purple-200",
+          text: "text-purple-600",
+        },
+      };
     return colors[color] || colors.orange;
   };
 

@@ -5,11 +5,21 @@ import { Order } from "@/types/order";
 import { User } from "@/types/user";
 
 // Checkout
-export async function createCheckoutSession(items: CheckoutItem[], user: User, paymentMethod?: string) {
-  const { data } = await axiosInstance.post<{ url: string; orderId?: string; paymentMethod?: string }>("/api/payment/checkout", {
+export async function createCheckoutSession(
+  items: CheckoutItem[],
+  user: User,
+  paymentMethod: string,
+  shippingAddress: any
+) {
+  const { data } = await axiosInstance.post<{
+    url: string;
+    orderId?: string;
+    paymentMethod?: string;
+  }>("/api/payment/checkout", {
     items,
     user,
     paymentMethod,
+    shippingAddress,
   });
   return data;
 }

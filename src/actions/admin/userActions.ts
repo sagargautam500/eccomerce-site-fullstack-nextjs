@@ -16,13 +16,7 @@ export interface UserFilters {
 
 // Replace your existing getAllUsers
 export async function getAllUsers(filters: UserFilters = {}) {
-  const {
-    page = 1,
-    limit = 10,
-    search = "",
-    role,
-    sort = "newest",
-  } = filters;
+  const { page = 1, limit = 10, search = "", role, sort = "newest" } = filters;
 
   const skip = (page - 1) * limit;
 
@@ -83,6 +77,7 @@ export async function getUserDetails(id: string) {
       orders: true,
       cartItems: true,
       wishlist: true,
+      addresses: true,
     },
   });
 
@@ -97,9 +92,9 @@ export async function getUserDetails(id: string) {
     orderCount: user.orders.length,
     cartItemCount: user.cartItems.length,
     wishlistCount: user.wishlist.length,
+    addresses: user.addresses,
   };
 }
-
 
 // CREATE USER (Admin Only)
 export async function createUser(data: {

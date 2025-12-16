@@ -10,13 +10,16 @@ export async function GET(
   const { id } = await params;
 
   if (!id || typeof id !== "string") {
-    return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Order ID is required" },
+      { status: 400 }
+    );
   }
 
   try {
     const order = await prisma.order.findUnique({
       where: { id },
-      include: { items: true, user: true },
+      include: { items: true, user: true, shippingAddress: true },
     });
 
     if (!order) {

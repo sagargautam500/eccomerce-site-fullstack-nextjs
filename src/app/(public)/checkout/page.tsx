@@ -1,3 +1,4 @@
+// src/app/(public)/checkout/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,18 +8,32 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ShoppingBag,
-  MapPin,
   Truck,
   Shield,
   Loader2,
   LogIn,
+  AlertCircle,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import PaymentMethodSelector from "@/components/PaymentMethodSelector";
+import PaymentMethodSelector from "@/components/checkout/PaymentMethodSelector";
+import ShippingAddressSelector from "@/components/checkout/ShippingAddressSelector";
+
+interface SelectedAddress {
+  id: string;
+  fullName: string;
+  phone: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  country: string;
+}
 
 export default function CheckoutPage() {
   const { data: session, status } = useSession();
   const [mounted, setMounted] = useState(false);
+  const [selectedAddress, setSelectedAddress] =
+    useState<SelectedAddress | null>(null);
 
   // Cart store
   const cart = useCartStore((s) => s.cart);
@@ -51,8 +66,12 @@ export default function CheckoutPage() {
           <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <LogIn className="w-10 h-10 text-orange-500" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h1>
-          <p className="text-gray-500 mb-6">Please login to proceed with checkout</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Login Required
+          </h1>
+          <p className="text-gray-500 mb-6">
+            Please login to proceed with checkout
+          </p>
           <Link
             href="/auth/signin"
             className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-pink-600 transition-all"
@@ -73,8 +92,12 @@ export default function CheckoutPage() {
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-12 h-12 text-gray-300" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Cart is Empty</h1>
-          <p className="text-gray-500 mb-6">Add some items to proceed with checkout</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Your Cart is Empty
+          </h1>
+          <p className="text-gray-500 mb-6">
+            Add some items to proceed with checkout
+          </p>
           <Link
             href="/products"
             className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-pink-600 transition-all"
@@ -110,22 +133,20 @@ export default function CheckoutPage() {
     email: session.user.email || "",
     name: session.user.name || "",
   };
+
   // Get image source
-const getImageSrc = (thumbnail: string) => {
-  if (!thumbnail) return "/placeholder.png";
+  const getImageSrc = (thumbnail?: string) => {
+    if (!thumbnail) return "/placeholder.png";
+    if (thumbnail.startsWith("http")) return thumbnail;
+    if (thumbnail.startsWith("/upload")) return thumbnail;
+    return `/products/${thumbnail}`;
+  };
 
-  // External URL
-  if (thumbnail.startsWith("http")) return thumbnail;
-
-  // Full local path: /uploads/products/file.jpg
-  if (thumbnail.startsWith("/upload")) return thumbnail;
-
-  // Only filename: product-123.jpg
-  return `/products/${thumbnail}`;
-};
+  // Check if can proceed to payment
+  const canProceedToPayment = selectedAddress !== null;
 
   return (
-    <div className="min-h-screen mt-4 bg-gray-50 py-6 px-4">
+    <div className="min-h-screen mt-16 bg-gray-50 py-6 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -135,32 +156,19 @@ const getImageSrc = (thumbnail: string) => {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Cart
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Checkout</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Checkout
+          </h1>
           <p className="text-gray-500 text-sm mt-1">{itemsCount} items</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left - Order Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Shipping Address */}
-            <div className="bg-white rounded-xl shadow-sm p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-orange-500" />
-                  Shipping Address
-                </h2>
-                <button className="text-orange-600 text-sm font-medium hover:text-orange-700">
-                  Change
-                </button>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="font-semibold text-gray-900">{session.user.name || "User"}</p>
-                <p className="text-gray-600 text-sm mt-1">{session.user.email}</p>
-                <p className="text-gray-500 text-sm mt-1">
-                  Please add your shipping address in profile settings
-                </p>
-              </div>
-            </div>
+            {/* Shipping Address Component */}
+            <ShippingAddressSelector
+              onAddressSelect={(address) => setSelectedAddress(address)}
+            />
 
             {/* Order Items */}
             <div className="bg-white rounded-xl shadow-sm p-5">
@@ -170,13 +178,16 @@ const getImageSrc = (thumbnail: string) => {
               </h2>
               <div className="space-y-4">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                  <div
+                    key={item.id}
+                    className="flex gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
+                  >
                     {/* Image */}
                     <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                       <Image
                         src={getImageSrc(item.product?.thumbnail)}
                         alt={item.product?.name || "Product"}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        sizes="64px"
                         fill
                         className="object-cover"
                       />
@@ -206,7 +217,10 @@ const getImageSrc = (thumbnail: string) => {
 
                     {/* Price */}
                     <p className="font-bold text-gray-900">
-                      NPR {((item.product?.price || 0) * item.quantity).toLocaleString()}
+                      NPR{" "}
+                      {(
+                        (item.product?.price || 0) * item.quantity
+                      ).toLocaleString()}
                     </p>
                   </div>
                 ))}
@@ -220,12 +234,16 @@ const getImageSrc = (thumbnail: string) => {
                 Delivery
               </h2>
               <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
-                <Truck className="w-6 h-6 text-green-600" />
+                <Truck className="w-6 h-6 text-green-600 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-green-800">
-                    {shipping === 0 ? "Free Delivery" : `Standard Delivery - NPR ${shipping}`}
+                    {shipping === 0
+                      ? "Free Delivery"
+                      : `Standard Delivery - NPR ${shipping}`}
                   </p>
-                  <p className="text-sm text-green-600">Estimated 3-5 business days</p>
+                  <p className="text-sm text-green-600">
+                    Estimated 3-5 business days
+                  </p>
                 </div>
               </div>
             </div>
@@ -235,12 +253,18 @@ const getImageSrc = (thumbnail: string) => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-5 sticky top-24">
               {/* Order Summary */}
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
-              
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                Order Summary
+              </h2>
+
               <div className="space-y-3 text-sm mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal ({itemsCount} items)</span>
-                  <span className="font-semibold">NPR {subtotal.toLocaleString()}</span>
+                  <span className="text-gray-600">
+                    Subtotal ({itemsCount} items)
+                  </span>
+                  <span className="font-semibold">
+                    NPR {subtotal.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
@@ -262,8 +286,31 @@ const getImageSrc = (thumbnail: string) => {
                 </div>
               </div>
 
+              {/* Address Required Warning */}
+              {!canProceedToPayment && (
+                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-orange-700">
+                    Please add a shipping address to continue
+                  </p>
+                </div>
+              )}
+
               {/* Payment Methods */}
-              <PaymentMethodSelector items={checkoutItems} user={currentUser} />
+              {canProceedToPayment ? (
+                <PaymentMethodSelector
+                  items={checkoutItems}
+                  user={currentUser}
+                  shippingAddress={selectedAddress}
+                />
+              ) : (
+                <button
+                  disabled
+                  className="w-full px-6 py-3 bg-gray-300 text-gray-500 font-semibold rounded-xl cursor-not-allowed"
+                >
+                  Add Address to Continue
+                </button>
+              )}
 
               {/* Security */}
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">

@@ -14,6 +14,7 @@ import {
   Package,
   Download,
   ShoppingBag,
+  MapPin,
 } from "lucide-react";
 import { getOrderDetails } from "@/actions/api/orderApi"; // ✅ individual async function
 import { Order } from "@/types/order";
@@ -39,7 +40,8 @@ export default async function OrderDetailPage({
   }
 
   const formatDate = (dateInput: string | Date) => {
-    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+    const date =
+      typeof dateInput === "string" ? new Date(dateInput) : dateInput;
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "long",
@@ -143,7 +145,9 @@ export default async function OrderDetailPage({
               <CreditCard className="w-5 h-5 text-gray-400 mt-1" />
               <div>
                 <p className="text-sm text-gray-600 mb-1">Payment Method</p>
-                <p className="text-gray-900 font-medium">{order.paymentMethod}</p>
+                <p className="text-gray-900 font-medium">
+                  {order.paymentMethod}
+                </p>
               </div>
             </div>
 
@@ -158,6 +162,51 @@ export default async function OrderDetailPage({
             </div>
           </div>
         </div>
+
+        {/* Shipping Information */}
+        {order.shippingAddress && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+            <div className="flex items-center gap-3 pb-6 border-b border-gray-200">
+              <MapPin className="w-6 h-6 text-gray-400" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Shipping Information
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 mt-6">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Full Name</p>
+                <p className="text-gray-900 font-medium">
+                  {order.shippingAddress.fullName}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Phone</p>
+                <p className="text-gray-900 font-medium">
+                  {order.shippingAddress.phone}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Address</p>
+                <p className="text-gray-900 font-medium">
+                  {order.shippingAddress.addressLine}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Location</p>
+                <p className="text-gray-900 font-medium">
+                  {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
+                  {order.shippingAddress.zipCode}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Country</p>
+                <p className="text-gray-900 font-medium">
+                  {order.shippingAddress.country}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Amount Card */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-lg p-8 mb-6">
@@ -220,7 +269,9 @@ export default async function OrderDetailPage({
 
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-gray-900">Total</span>
+                <span className="text-lg font-semibold text-gray-900">
+                  Total
+                </span>
                 <span className="text-2xl font-bold text-green-600">
                   {order.currency.toUpperCase()} {order.amount.toLocaleString()}
                 </span>
@@ -230,7 +281,9 @@ export default async function OrderDetailPage({
         )}
 
         {/* Transaction IDs */}
-        {(order.stripeCheckoutSession || order.esewaRefId || order.khaltiToken) && (
+        {(order.stripeCheckoutSession ||
+          order.esewaRefId ||
+          order.khaltiToken) && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Transaction Information
@@ -238,7 +291,9 @@ export default async function OrderDetailPage({
             <div className="space-y-3">
               {order.stripeCheckoutSession && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Stripe Checkout Session ID</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Stripe Checkout Session ID
+                  </p>
                   <p className="font-mono text-sm text-gray-900 break-all">
                     {order.stripeCheckoutSession}
                   </p>
@@ -246,7 +301,9 @@ export default async function OrderDetailPage({
               )}
               {order.stripePaymentIntentId && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Stripe Payment Intent ID</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Stripe Payment Intent ID
+                  </p>
                   <p className="font-mono text-sm text-gray-900 break-all">
                     {order.stripePaymentIntentId}
                   </p>
@@ -254,7 +311,9 @@ export default async function OrderDetailPage({
               )}
               {order.esewaRefId && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">eSewa Reference ID</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    eSewa Reference ID
+                  </p>
                   <p className="font-mono text-sm text-gray-900 break-all">
                     {order.esewaRefId}
                   </p>
@@ -293,8 +352,8 @@ export default async function OrderDetailPage({
           <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">
               ⏳ <strong>Payment Pending:</strong> Your payment is being
-              processed. This usually takes a few minutes. You&apos;ll receive an
-              email confirmation once completed.
+              processed. This usually takes a few minutes. You&apos;ll receive
+              an email confirmation once completed.
             </p>
           </div>
         )}
