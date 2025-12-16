@@ -18,9 +18,12 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 export default function SigninPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" }>({ 
-    text: "", 
-    type: "error" 
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error";
+  }>({
+    text: "",
+    type: "error",
   });
 
   const router = useRouter();
@@ -28,7 +31,7 @@ export default function SigninPage() {
   // Sign in form
   const signinForm = useForm<SigninFormData>({
     resolver: zodResolver(signinSchema),
-    mode: "onChange"
+    mode: "onChange",
   });
 
   // Show message helper
@@ -43,7 +46,9 @@ export default function SigninPage() {
       setLoading(true);
       await handleCredentialsSignIn(data.email.trim(), data.password);
     } catch (error) {
-      showMessage((error as Error).message, "error");
+      const errMessage = (error as Error).message;
+      if (errMessage.includes("NEXT_REDIRECT")) return;
+      showMessage(errMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -59,7 +64,7 @@ export default function SigninPage() {
     <div className="min-h-screen mt-8 bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
-        <PageHeader 
+        <PageHeader
           showForgotPassword={showForgotPassword}
           onBackToSignin={() => setShowForgotPassword(false)}
         />

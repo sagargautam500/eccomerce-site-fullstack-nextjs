@@ -21,6 +21,7 @@ import {
   Award,
   Clock,
 } from "lucide-react";
+import ShippingAddressSelector from "@/components/checkout/ShippingAddressSelector";
 import { User } from "@/types/user";
 import { updateUserProfile } from "@/actions/api/userApi";
 import { toast } from "sonner";
@@ -87,7 +88,7 @@ export default function ProfileClient({
         {/* Header */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 h-32 sm:h-40"></div>
-          
+
           <div className="px-6 sm:px-8 pb-8">
             <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-16 sm:-mt-20 mb-6">
               {/* Profile Image */}
@@ -97,7 +98,7 @@ export default function ProfileClient({
                     <Image
                       src={session.user.image}
                       alt={user.name || "Profile"}
-                        width={160}
+                      width={160}
                       height={160}
                       className="object-cover"
                     />
@@ -153,7 +154,7 @@ export default function ProfileClient({
                     </button>
                   </div>
                 )}
-                
+
                 <div className="flex flex-col sm:flex-row items-center gap-4 mt-2 text-gray-600">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
@@ -161,7 +162,9 @@ export default function ProfileClient({
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    <span className="text-sm">Joined {formatDate(user.createdAt)}</span>
+                    <span className="text-sm">
+                      Joined {formatDate(user.createdAt)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -174,7 +177,9 @@ export default function ProfileClient({
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all border-2 border-transparent hover:border-blue-200"
               >
                 <Package className="w-8 h-8 text-blue-600" />
-                <span className="text-sm font-semibold text-gray-900">My Orders</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  My Orders
+                </span>
               </Link>
 
               <Link
@@ -182,7 +187,9 @@ export default function ProfileClient({
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-pink-50 to-red-50 hover:from-pink-100 hover:to-red-100 transition-all border-2 border-transparent hover:border-pink-200"
               >
                 <Heart className="w-8 h-8 text-pink-600" />
-                <span className="text-sm font-semibold text-gray-900">Wishlist</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Wishlist
+                </span>
               </Link>
 
               <Link
@@ -190,7 +197,9 @@ export default function ProfileClient({
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-orange-50 to-yellow-50 hover:from-orange-100 hover:to-yellow-100 transition-all border-2 border-transparent hover:border-orange-200"
               >
                 <ShoppingCart className="w-8 h-8 text-orange-600" />
-                <span className="text-sm font-semibold text-gray-900">Cart</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Cart
+                </span>
               </Link>
 
               <Link
@@ -198,7 +207,9 @@ export default function ProfileClient({
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-all border-2 border-transparent hover:border-purple-200"
               >
                 <ShoppingBag className="w-8 h-8 text-purple-600" />
-                <span className="text-sm font-semibold text-gray-900">Shop Now</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  Shop Now
+                </span>
               </Link>
             </div>
           </div>
@@ -212,9 +223,13 @@ export default function ProfileClient({
                 <div className="bg-blue-100 p-3 rounded-xl">
                   <Package className="w-6 h-6 text-blue-600" />
                 </div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Orders</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase">
+                  Orders
+                </span>
               </div>
-              <p className="text-3xl font-black text-gray-900">{stats.totalOrders}</p>
+              <p className="text-3xl font-black text-gray-900">
+                {stats.totalOrders}
+              </p>
               <p className="text-sm text-gray-600 mt-1">Total Orders</p>
             </div>
 
@@ -223,7 +238,9 @@ export default function ProfileClient({
                 <div className="bg-green-100 p-3 rounded-xl">
                   <TrendingUp className="w-6 h-6 text-green-600" />
                 </div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Spent</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase">
+                  Spent
+                </span>
               </div>
               <p className="text-3xl font-black text-gray-900">
                 NPR {stats.totalSpent.toLocaleString()}
@@ -236,9 +253,13 @@ export default function ProfileClient({
                 <div className="bg-pink-100 p-3 rounded-xl">
                   <Heart className="w-6 h-6 text-pink-600" />
                 </div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Wishlist</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase">
+                  Wishlist
+                </span>
               </div>
-              <p className="text-3xl font-black text-gray-900">{stats.wishlistCount}</p>
+              <p className="text-3xl font-black text-gray-900">
+                {stats.wishlistCount}
+              </p>
               <p className="text-sm text-gray-600 mt-1">Saved Items</p>
             </div>
 
@@ -247,13 +268,22 @@ export default function ProfileClient({
                 <div className="bg-orange-100 p-3 rounded-xl">
                   <ShoppingCart className="w-6 h-6 text-orange-600" />
                 </div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Cart</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase">
+                  Cart
+                </span>
               </div>
-              <p className="text-3xl font-black text-gray-900">{stats.cartItemsCount}</p>
+              <p className="text-3xl font-black text-gray-900">
+                {stats.cartItemsCount}
+              </p>
               <p className="text-sm text-gray-600 mt-1">Items in Cart</p>
             </div>
           </div>
         )}
+
+        {/* Saved Addresses */}
+        <div className="mb-8">
+          <ShippingAddressSelector />
+        </div>
 
         {/* Additional Info */}
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
@@ -261,27 +291,41 @@ export default function ProfileClient({
             <Clock className="w-6 h-6 text-orange-500" />
             Account Information
           </h2>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-semibold text-gray-600 uppercase">Email Address</label>
+                <label className="text-sm font-semibold text-gray-600 uppercase">
+                  Email Address
+                </label>
                 <p className="text-lg text-gray-900 mt-1">{user.email}</p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600 uppercase">Account Type</label>
-                <p className="text-lg text-gray-900 mt-1 capitalize">{user.role}</p>
+                <label className="text-sm font-semibold text-gray-600 uppercase">
+                  Account Type
+                </label>
+                <p className="text-lg text-gray-900 mt-1 capitalize">
+                  {user.role}
+                </p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-semibold text-gray-600 uppercase">Member Since</label>
-                <p className="text-lg text-gray-900 mt-1">{formatDate(user.createdAt)}</p>
+                <label className="text-sm font-semibold text-gray-600 uppercase">
+                  Member Since
+                </label>
+                <p className="text-lg text-gray-900 mt-1">
+                  {formatDate(user.createdAt)}
+                </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600 uppercase">Last Updated</label>
-                <p className="text-lg text-gray-900 mt-1">{formatDate(user.updatedAt)}</p>
+                <label className="text-sm font-semibold text-gray-600 uppercase">
+                  Last Updated
+                </label>
+                <p className="text-lg text-gray-900 mt-1">
+                  {formatDate(user.updatedAt)}
+                </p>
               </div>
             </div>
           </div>

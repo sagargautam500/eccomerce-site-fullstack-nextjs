@@ -22,6 +22,7 @@ export default async function ProfilePage() {
     redirect("/auth/signin");
   }
 
+  
   return (
     <ProfileClient
       user={userProfile}

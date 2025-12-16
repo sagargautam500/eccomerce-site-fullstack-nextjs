@@ -14,18 +14,18 @@ export default async function UserDetailsPage({
     return <div className="p-6">User not found</div>;
   }
 
- interface AddressProps {
-  id: string;
-  userId: string;
-  fullName: string;
-  phone: string;
-  addressLine: string;
-  city: string;
-  state: string;
-  zipCode?: string;
-  country: string;
-  isDefault: boolean;
-}
+  interface AddressProps {
+    id: string;
+    userId: string;
+    fullName: string;
+    phone: string;
+    addressLine: string;
+    city: string;
+    state: string;
+    zipCode?: string | null;
+    country: string;
+    isDefault: boolean;
+  }
 
   return (
     <div className="p-6 space-y-4">
