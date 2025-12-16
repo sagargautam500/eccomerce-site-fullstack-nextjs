@@ -3,22 +3,22 @@ export interface OrderItem {
   orderId: string;
   productId: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   originalPrice?: number;
   discount?: number;
   brand?: string;
-  category: string;
+  category?: string;
   subCategory?: string;
   thumbnail: string;
-  images: string[];
+  images?: string[];
   size?: string;
   color?: string;
   quantity: number;
   stockAtOrder?: number;
   rating?: number;
   totalReviews?: number;
-  isFeatured: boolean;
+  isFeatured?: boolean;
 }
 
 export interface OrderAddress {
