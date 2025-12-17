@@ -53,11 +53,15 @@ export default function MultipleImageUpload({
         formData.append("file", file);
 
         try {
-          const response = await axiosInstance.post("/api/admin/upload", formData, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          });
+          const response = await axiosInstance.post(
+            "/api/admin/upload",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
 
           const { url } = response.data;
           uploadedUrls.push(url);
@@ -65,9 +69,7 @@ export default function MultipleImageUpload({
         } catch (error: any) {
           console.error(`Upload error for ${file.name}:`, error);
           const errorMessage =
-            error.response?.data?.error ||
-            error.message ||
-            "Failed to upload";
+            error.response?.data?.error || error.message || "Failed to upload";
           toast.error(`${file.name}: ${errorMessage}`);
         }
       }
@@ -87,11 +89,12 @@ export default function MultipleImageUpload({
   const handleRemove = async (index: number) => {
     const imageUrl = images[index];
 
-    // If it's an uploaded file, optionally delete it from server
-    if (imageUrl.startsWith("/uploads/products/")) {
+    // If it's a Cloudinary URL, optionally delete it from server
+    if (imageUrl.includes("cloudinary.com")) {
       try {
-        const filename = imageUrl.split("/").pop();
-        await axiosInstance.delete(`/api/admin/upload?filename=${filename}`);
+        await axiosInstance.delete(
+          `/api/admin/delete-image?url=${encodeURIComponent(imageUrl)}`
+        );
       } catch (error) {
         console.error("Delete error:", error);
         // Continue anyway to remove from UI

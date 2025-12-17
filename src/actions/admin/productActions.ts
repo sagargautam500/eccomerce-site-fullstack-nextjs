@@ -4,7 +4,7 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { deleteMultipleImageFiles } from "@/lib/deleteImage";
+import { bulkDeleteCloudinaryImages, deleteMultipleImageFiles } from "@/lib/deleteImage";
 
 // Types
 export interface ProductFilters {
@@ -331,7 +331,6 @@ export async function updateProduct(productId: string, data: ProductFormData) {
         throw new Error("Subcategory not found");
       }
 
-      // Verify subcategory belongs to the selected category
       if (subCategory.categoryId !== data.categoryId) {
         throw new Error(
           "Subcategory does not belong to the selected category"
@@ -339,7 +338,7 @@ export async function updateProduct(productId: string, data: ProductFormData) {
       }
     }
 
-    // Find images to delete (old images not in new data)
+    // Find Cloudinary images to delete (old images not in new data)
     const oldImages = [
       existingProduct.thumbnail,
       ...existingProduct.images,
@@ -376,9 +375,12 @@ export async function updateProduct(productId: string, data: ProductFormData) {
       },
     });
 
-    // Delete old images after successful update
+    // Delete old images from Cloudinary after successful update
     if (imagesToDelete.length > 0) {
-      await deleteMultipleImageFiles(imagesToDelete);
+      // Use background deletion to not block the response
+      deleteMultipleImageFiles(imagesToDelete).catch((error) => {
+        console.error("Failed to delete old images from Cloudinary:", error);
+      });
     }
 
     revalidatePath("/admin/products");
@@ -411,7 +413,7 @@ export async function deleteProduct(productId: string) {
       throw new Error("Product not found");
     }
 
-    // Collect all images to delete
+    // Collect all Cloudinary images to delete
     const imagesToDelete = [
       product.thumbnail,
       ...product.images,
@@ -422,9 +424,12 @@ export async function deleteProduct(productId: string) {
       where: { id: productId },
     });
 
-    // Delete associated image files
+    // Delete associated images from Cloudinary
     if (imagesToDelete.length > 0) {
-      await deleteMultipleImageFiles(imagesToDelete);
+      // Use background deletion to not block the response
+      deleteMultipleImageFiles(imagesToDelete).catch((error) => {
+        console.error("Failed to delete images from Cloudinary:", error);
+      });
     }
 
     revalidatePath("/admin/products");
@@ -463,7 +468,7 @@ export async function bulkDeleteProducts(productIds: string[]) {
       },
     });
 
-    // Collect all images to delete
+    // Collect all Cloudinary images to delete
     const allImagesToDelete: string[] = [];
     products.forEach((product) => {
       if (product.thumbnail) {
@@ -481,9 +486,12 @@ export async function bulkDeleteProducts(productIds: string[]) {
       },
     });
 
-    // Delete associated image files
+    // Delete associated images from Cloudinary (use bulk delete for efficiency)
     if (allImagesToDelete.length > 0) {
-      await deleteMultipleImageFiles(allImagesToDelete);
+      // Use background bulk deletion
+      bulkDeleteCloudinaryImages(allImagesToDelete).catch((error) => {
+        console.error("Failed to bulk delete images from Cloudinary:", error);
+      });
     }
 
     revalidatePath("/admin/products");

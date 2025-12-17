@@ -280,11 +280,11 @@ export default function AdminProductsPage() {
 
 const getImageSrc = (thumbnail: string) => {
   if (!thumbnail) return "/placeholder.png";
-
-  // Case 1: Already full path like /uploads/products/file.jpg
-  if (thumbnail.startsWith("/")) return thumbnail;
-
-  // Case 2: Only filename like product-123.jpg
+  // External URL
+  if (thumbnail.startsWith("http")) return thumbnail;
+  // Full local path: /uploads/products/file.jpg
+  if (thumbnail.startsWith("/upload")) return thumbnail;
+  // Only filename: product-123.jpg
   return `/products/${thumbnail}`;
 };
 

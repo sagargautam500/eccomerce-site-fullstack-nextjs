@@ -60,7 +60,9 @@ export default function ImageUpload({
     } catch (error: any) {
       console.error("Upload error:", error);
       const errorMessage =
-        error.response?.data?.error || error.message || "Failed to upload image";
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to upload image";
       toast.error(errorMessage);
     } finally {
       setUploading(false);
@@ -71,11 +73,12 @@ export default function ImageUpload({
   };
 
   const handleRemove = async () => {
-    // If it's an uploaded file (starts with /uploads/), optionally delete it
-    if (preview.startsWith("/uploads/products/")) {
+    // If it's a Cloudinary URL, optionally delete it
+    if (preview.includes("cloudinary.com")) {
       try {
-        const filename = preview.split("/").pop();
-        await axiosInstance.delete(`/api/admin/upload?filename=${filename}`);
+        await axiosInstance.delete(
+          `/api/admin/delete-image?url=${encodeURIComponent(preview)}`
+        );
       } catch (error) {
         console.error("Delete error:", error);
         // Continue anyway to remove from UI
@@ -178,9 +181,7 @@ export default function ImageUpload({
         />
       </div>
 
-      {helperText && (
-        <p className="text-xs text-gray-500 mt-1">{helperText}</p>
-      )}
+      {helperText && <p className="text-xs text-gray-500 mt-1">{helperText}</p>}
     </div>
   );
 }

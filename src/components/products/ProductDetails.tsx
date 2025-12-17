@@ -43,12 +43,13 @@ const ImageGallery = ({
   discount: number;
   isFeatured: boolean;
 }) => {
-  const getImageSrc = (img: string) => {
+ const getImageSrc = (img: string) => {
   if (!img) return "/placeholder.png";
-
-  // Case 1: Already full path like /uploads/products/file.jpg
-  if (img.startsWith("/")) return img;
-  // Case 2: Only filename like product-123.jpg
+  // External URL
+  if (img.startsWith("http")) return img;
+  // Full local path: /uploads/products/file.jpg
+  if (img.startsWith("/upload")) return img;
+  // Only filename: product-123.jpg
   return `/products/${img}`;
 };
 

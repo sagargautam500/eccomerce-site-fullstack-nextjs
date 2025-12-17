@@ -18,7 +18,9 @@ export interface CategoryFilters {
   search?: string;
 }
 
-export async function getAllCategoriesWithCounts(filters: CategoryFilters = {}) {
+export async function getAllCategoriesWithCounts(
+  filters: CategoryFilters = {}
+) {
   if (!(await isAdmin())) {
     throw new Error("Unauthorized");
   }
@@ -86,14 +88,17 @@ export async function createCategory(data: { name: string; image?: string }) {
     });
 
     if (existing) {
-      return { success: false, message: "Category with this name already exists" };
+      return {
+        success: false,
+        message: "Category with this name already exists",
+      };
     }
 
     const category = await prisma.category.create({
-      data: { 
-        name: data.name, 
-        slug, 
-        image: data.image || null 
+      data: {
+        name: data.name,
+        slug,
+        image: data.image || null,
       },
     });
 
@@ -106,7 +111,10 @@ export async function createCategory(data: { name: string; image?: string }) {
 }
 
 // UPDATE CATEGORY
-export async function updateCategory(id: string, data: { name: string; image?: string }) {
+export async function updateCategory(
+  id: string,
+  data: { name: string; image?: string }
+) {
   if (!(await isAdmin())) {
     throw new Error("Unauthorized");
   }
@@ -116,14 +124,17 @@ export async function updateCategory(id: string, data: { name: string; image?: s
 
     // Check if another category with same slug exists
     const existing = await prisma.category.findFirst({
-      where: { 
+      where: {
         slug,
-        NOT: { id }
+        NOT: { id },
       },
     });
 
     if (existing) {
-      return { success: false, message: "Category with this name already exists" };
+      return {
+        success: false,
+        message: "Category with this name already exists",
+      };
     }
 
     // Get old category data to check for image changes
@@ -139,20 +150,26 @@ export async function updateCategory(id: string, data: { name: string; image?: s
     // Update category
     const category = await prisma.category.update({
       where: { id },
-      data: { 
-        name: data.name, 
-        slug, 
-        image: data.image || null 
+      data: {
+        name: data.name,
+        slug,
+        image: data.image || null,
       },
     });
 
-    // Delete old image if it was replaced with a new one
+    // Delete old Cloudinary image if it was replaced with a new one
     if (
-      oldCategory.image && 
+      oldCategory.image &&
       oldCategory.image !== data.image &&
-      oldCategory.image.startsWith("/uploads/")
+      oldCategory.image.includes("cloudinary.com")
     ) {
-      await deleteImageFile(oldCategory.image);
+      // Use background deletion to not block the response
+      deleteImageFile(oldCategory.image).catch((error) => {
+        console.error(
+          "Failed to delete old category image from Cloudinary:",
+          error
+        );
+      });
     }
 
     revalidatePath("/admin/categories");
@@ -175,9 +192,9 @@ export async function deleteCategory(id: string) {
       where: { id },
       include: {
         _count: {
-          select: { 
+          select: {
             products: true,
-            subCategories: true 
+            subCategories: true,
           },
         },
       },
@@ -202,9 +219,15 @@ export async function deleteCategory(id: string) {
     // Delete category from database
     await prisma.category.delete({ where: { id } });
 
-    // Delete associated image file if it exists
-    if (category.image && category.image.startsWith("/uploads/")) {
-      await deleteImageFile(category.image);
+    // Delete associated image from Cloudinary if it exists
+    if (category.image && category.image.includes("cloudinary.com")) {
+      // Use background deletion to not block the response
+      deleteImageFile(category.image).catch((error) => {
+        console.error(
+          "Failed to delete category image from Cloudinary:",
+          error
+        );
+      });
     }
 
     revalidatePath("/admin/categories");
@@ -226,9 +249,9 @@ export async function getCategoryByIdAdmin(id: string) {
       where: { id },
       include: {
         _count: {
-          select: { 
+          select: {
             products: true,
-            subCategories: true 
+            subCategories: true,
           },
         },
         subCategories: {

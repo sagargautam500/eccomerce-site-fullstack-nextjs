@@ -178,11 +178,15 @@ export default function CategoriesPage() {
     setShowEditModal(true);
   };
 
-  const getImageSrc = (image?: string | null) => {
-    if (!image) return "";
-    if (image.startsWith("/")) return image;
-    return `/categories/${image}`;
-  };
+ const getImageSrc = (image?: string|null) => {
+  if (!image) return "/placeholder.png";
+  // External URL
+  if (image.startsWith("http")) return image;
+  // Full local path: /uploads/products/file.jpg
+  if (image.startsWith("/upload")) return image;
+  // Only filename: product-123.jpg
+  return `/products/${image}`;
+};
 
   const totalProducts = categories.reduce((sum, cat) => sum + cat.productCount, 0);
   const totalSubCategories = categories.reduce(

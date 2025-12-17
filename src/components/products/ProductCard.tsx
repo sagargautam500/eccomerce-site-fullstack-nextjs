@@ -27,16 +27,14 @@ export default function ProductCard({
 
 const getImageSrc = (thumbnail: string) => {
   if (!thumbnail) return "/placeholder.png";
-
   // External URL
   if (thumbnail.startsWith("http")) return thumbnail;
-
   // Full local path: /uploads/products/file.jpg
   if (thumbnail.startsWith("/upload")) return thumbnail;
-
   // Only filename: product-123.jpg
   return `/products/${thumbnail}`;
 };
+
 
 
   return (
