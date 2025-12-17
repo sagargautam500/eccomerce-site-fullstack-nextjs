@@ -144,6 +144,65 @@ KHALTI_VERIFY_URL_PROD="https://khalti.com/api/v2/payment/verify/"
 
 ```
 
+Create a `.env.production` file in the root directory:
+
+```env
+# ================================
+# NextAuth (Production)
+# ================================
+NEXTAUTH_URL=https://www.chimteshworenterprises.com.np
+NEXTAUTH_SECRET=YOUR_STRONG_RANDOM_SECRET
+
+
+# ================================
+# Google OAuth (Production)
+# ================================
+GOOGLE_CLIENT_ID=YOUR_PROD_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=YOUR_PROD_GOOGLE_CLIENT_SECRET
+
+
+# ================================
+# Email (Gmail SMTP)
+# ================================
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=gautamsagar.sct@gmail.com
+SMTP_PASS=YOUR_APP_PASSWORD
+CONTACT_EMAIL=sagargautam389@gmail.com
+
+
+# ================================
+# Stripe (LIVE MODE)
+# ================================
+STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxx
+
+
+# ================================
+# Base URL
+# ================================
+NEXT_PUBLIC_BASE_URL=https://www.chimteshworenterprises.com.np
+
+
+# ================================
+# eSewa (PRODUCTION)
+# ================================
+NEXT_PUBLIC_ESEWA_URL=https://esewa.com.np/epay/main
+ESEWA_VERIFY_URL=https://esewa.com.np/epay/transrec
+ESEWA_MERCHANT_CODE=YOUR_ESEWA_MERCHANT_CODE
+ESEWA_SECRET_KEY=YOUR_ESEWA_SECRET_KEY
+
+
+# ================================
+# Khalti (PRODUCTION)
+# ================================
+NEXT_PUBLIC_KHALTI_PUBLIC_KEY=live_public_key_xxxxx
+KHALTI_SECRET_KEY=live_secret_key_xxxxx
+KHALTI_VERIFY_URL=https://khalti.com/api/v2/payment/verify/
+
+```
+
 4. **Setup Database**
 ```bash
 # Generate Prisma Client
